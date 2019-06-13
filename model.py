@@ -13,7 +13,7 @@ class funds_state:
 class deltas_state:
     """Records deltas for a given year, including pre-tax salary, income tax, RRSP contribution, TFSA contribution, and spending."""
 
-    def __init__(self, year, gross_salary, tax, rrsp, tfsa, spending, rrsp_interest, tfsa_interest):
+    def __init__(self, year, gross_salary, tax, rrsp, tfsa, spending, rrsp_interest, tfsa_interest, tax_refund):
         self._year = year
         self._gross_salary = gross_salary
         self._tax = tax
@@ -22,14 +22,15 @@ class deltas_state:
         self._spending = spending
         self._rrsp_interest = rrsp_interest
         self._tfsa_interest = tfsa_interest
+        self._tax_refund = tax_refund
 
     @classmethod
     def from_year(cls, year):
-        return deltas_state(year, 0, 0, 0, 0, 0, 0, 0)
+        return deltas_state(year, 0, 0, 0, 0, 0, 0, 0, 0)
 
     def _copy(self):
         output = deltas_state(self.year, self.gross_salary, self.tax, self.rrsp,
-                              self.tfsa, self.spending, self.rrsp_interest, self.tfsa_interest)
+                              self.tfsa, self.spending, self.rrsp_interest, self.tfsa_interest, self._tax_refund)
         return output
 
     @property
@@ -112,9 +113,31 @@ class deltas_state:
         output._tfsa_interest = new_value
         return output
 
+    @property
+    def tax_refund(self):
+        """Tax refund received."""
+        return self._tax_refund
+
+    def update_tax_refund(self, new_value):
+        output = self._copy()
+        output._tax_refund = new_value
+        return output
+
+    @property
+    def total_income(self):
+        """Salary plus tax refund."""
+        return self.gross_salary + self.tax_refund
+
+    @property
+    def taxable_income(self):
+        """Taxable portion of salary, ie less the RRSP contribution."""
+        return self.gross_salary - self.rrsp
+
 
 def get_updated_funds_from_deltas(previous_funds: funds_state, deltas: deltas_state):
-    """Applies a set of deltas to a funds state, and returns the corresponding updated funds state."""
+    """Applies a set of deltas to a funds state, and returns the corresponding updated funds state.
+
+       RRSP contributions and interest are added to the RRSP, TFSA contributions and interest are added to the TFSA."""
     assert deltas.year == previous_funds.year + 1
     # TODO: tax refund
     return funds_state(previous_funds.rrsp_savings + deltas.rrsp + deltas._rrsp_interest, previous_funds.tfsa_savings + deltas.tfsa + deltas._tfsa_interest, deltas.year)
