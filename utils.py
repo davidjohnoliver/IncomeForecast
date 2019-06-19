@@ -15,10 +15,9 @@ class HistoricValue:
     def values(self):
         return tuple(self._values)
 
-
     def __init__(self, initial_value: float, initial_year: int):
-        self._values = [ initial_value]
+        self._values = [initial_value]
         self._initial_year = initial_year
 
-    def set_latest_value(self, value : float):
+    def set_latest_value(self, value: float):
         self._values.append(value)
