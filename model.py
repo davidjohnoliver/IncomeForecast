@@ -11,7 +11,8 @@ class funds_state:
 
 
 class deltas_state:
-    """Records deltas for a given year, including pre-tax salary, income tax, RRSP contribution, TFSA contribution, and spending."""
+    """Records deltas for a given year, including pre-tax salary, income tax, RRSP contribution, TFSA contribution, and spending. Immutable, 
+    call update_x() to create a mutated value with modified x."""
 
     def __init__(self, year, gross_salary, tax, rrsp, tfsa, spending, rrsp_interest, tfsa_interest, tax_refund):
         self._year = year
@@ -146,7 +147,9 @@ def get_updated_funds_from_deltas(previous_funds: funds_state, deltas: deltas_st
 def get_updated_deltas_from_rules(previous_funds: funds_state, previous_deltas: deltas_state, rules):
     """Applies the provided list of rules in sequence to produce a set of deltas. The signature for a rule is:
      def rule(deltas: model.deltas_state, previous_funds: model.funds_state, previous_deltas: model.deltas_state)
-    Each rule operates on the output of the previous rule."""
+    Each rule operates on the output of the previous rule.
+    
+    The output deltas are for the year subsequent to that of previous_funds and previous_deltas."""
     assert previous_funds.year == previous_deltas.year
     deltas = deltas_state.from_year(previous_funds.year + 1)
     for rule in rules:
