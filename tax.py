@@ -1,5 +1,6 @@
 from enum import Enum
 from typing import List
+import datetime
 
 
 class _TaxBracket:
@@ -57,6 +58,8 @@ def get_income_tax(taxable_income: float):
     """
     Returns the total income tax owed for the nominated amount of taxable income (earned in Quebec by a Quebec resident).
     """
+
+    assert datetime.datetime.now().year == 2019 # Marginal tax brackets should be kept up to date.
 
     caTax = get_income_tax_from_brackets(
         taxable_income, _qcAbatement, _caBrackets)
