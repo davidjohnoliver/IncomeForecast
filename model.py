@@ -1,3 +1,6 @@
+"""
+Base state classes and update logic. 
+"""
 import utils
 
 
