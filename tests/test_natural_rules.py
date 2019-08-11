@@ -16,7 +16,7 @@ def test_apply_tax(gross_salary, rrsp):
     if (rrsp > gross_salary):
         return # 
     
-    taxable_income = gross_salary - rrsp
+    taxable_income = gross_salary
 
     expected_income_tax = tax.get_income_tax(taxable_income)
 
@@ -26,3 +26,22 @@ def test_apply_tax(gross_salary, rrsp):
     delta = natural_rules.apply_tax(delta, None, None)
 
     assert expected_income_tax == delta.tax
+
+def test_apply_tax_refund(gross_salary, rrsp):
+    previous_actual_taxable_income = gross_salary - rrsp
+
+    paid_tax = tax.get_income_tax(gross_salary)
+    correct_tax = tax.get_income_tax(previous_actual_taxable_income)
+    expected_refund = paid_tax - correct_tax
+    
+    previous_delta = model.deltas_state.from_year(1999)
+    previous_delta = previous_delta.update_gross_salary(gross_salary)
+    previous_delta = previous_delta.update_rrsp(rrsp)
+    previous_delta = natural_rules.apply_tax(previous_delta, None, None)
+
+    delta = model.deltas_state.from_year(2000)
+
+    delta = natural_rules.apply_tax_refund(delta, None, previous_delta)
+
+    assert expected_refund == delta.tax_refund
+
