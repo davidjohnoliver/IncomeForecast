@@ -1,5 +1,13 @@
 import model
 
+def test_calculated_delta_values():
+    deltas = model.deltas_state.from_year(1999)
+    deltas = deltas.update_gross_salary(30000)
+    deltas = deltas.update_tax(19000)
+    deltas = deltas.update_tax_refund(700)
+    deltas = deltas.update_spending(60)
+    assert 11700 == deltas.total_net_income
+    assert 11640 == deltas.undifferentiated_savings    
 
 def test_get_updated_funds_from_deltas():
     year = 2040

@@ -128,14 +128,19 @@ class deltas_state:
         return output
 
     @property
-    def total_income(self):
-        """Salary plus tax refund."""
-        return self.gross_salary + self.tax_refund
+    def total_net_income(self):
+        """Salary plus tax refund (from last year) minus tax owed."""
+        return self.gross_salary + self.tax_refund - self.tax
 
     @property
     def taxable_income(self):
         """Taxable portion of salary, ie less the RRSP contribution."""
         return self.gross_salary - self.rrsp
+
+    @property
+    def undifferentiated_savings(self):
+        """Total savings available to be split between RRSP and TFSA. """
+        return self.total_net_income - self.spending
 
 
 def get_updated_funds_from_deltas(previous_funds: funds_state, deltas: deltas_state):
@@ -143,7 +148,6 @@ def get_updated_funds_from_deltas(previous_funds: funds_state, deltas: deltas_st
 
        RRSP contributions and interest are added to the RRSP, TFSA contributions and interest are added to the TFSA."""
     assert deltas.year == previous_funds.year + 1
-    # TODO: tax refund
     return funds_state(previous_funds.rrsp_savings + deltas.rrsp + deltas._rrsp_interest, previous_funds.tfsa_savings + deltas.tfsa + deltas._tfsa_interest, deltas.year)
 
 
