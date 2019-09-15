@@ -20,7 +20,7 @@ def get_simple_linear(initial_rrsp: float, final_rrsp: float, initial_year: int,
         years_elapsed = deltas.year - initial_year
 
         if not (0 <= years_elapsed <= career_length_yrs):
-            raise ValueError(f"{deltas.year} lies outside the allowed range of years for the rule (initial_year={initial_year}, career length={career_length_yrs})")
+            raise ValueError(f"{deltas.year} lies outside the allowed range of years for the rule (initial year={initial_year}, career length={career_length_yrs})")
 
         rrsp_norm = initial_rrsp + slope * years_elapsed        
         assert 0 <= rrsp_norm <= 1
