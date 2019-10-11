@@ -32,3 +32,32 @@ def get_simple_linear(initial_rrsp: float, final_rrsp: float, initial_year: int,
         return output
     
     return simple_linear
+
+def get_simple_retirement_deduction(retirement_year: int, year_of_death: int):
+    """
+    Deduct from savings to cover retirement income. The split between RRSP and TFSA is made by a simple heuristic which tries to keep a 
+    constant level of RRSP withdrawals, to minimize marginal tax.
+    """
+
+    def simple_retirement_deduction(deltas: model.deltas_state, previous_funds: model.funds_state, previous_deltas: model.deltas_state):
+        years_elapsed = deltas.year - retirement_year
+        years_remaining = year_of_death - deltas.year
+
+        if (years_elapsed < 0 or deltas.year > year_of_death):
+            raise ValueError(f"{deltas.year} lies outside the allowed range of years for the rule (initial year={retirement_year}, final year={year_of_death})")
+
+        #
+        spending = -deltas.undifferentiated_savings # We expect undifferentiated_savings to be a negative value, with contributions from
+            # spending (retirement income) + tax owed on last year's RRSP withdrawal
+        remaining_rrsp = previous_funds.rrsp_savings
+        rrsp_allotment = remaining_rrsp / years_remaining # Try to distribute RRSP withdrawals evenly to minimize marginal tax
+        rrsp_withdrawal = max(min(spending, rrsp_allotment), 0) # Don't let the RRSP go below 0. This is mainly to try to cut down on weird edge 
+            # cases; if final savings is below 0 for any given run we don't care that much, the outer simulation will simply discard that run.
+        tfsa_withdrawal = spending - rrsp_withdrawal
+
+        output = deltas.update_rrsp(-rrsp_withdrawal)
+        output = output.update_tfsa(-tfsa_withdrawal)
+
+        return output
+    
+    return simple_retirement_deduction
