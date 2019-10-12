@@ -13,6 +13,10 @@ def gross_salary(request):
 def rrsp(request):
     return request.param
 
+@pytest.fixture(params=[0, 100, 500, 1000, 3000])
+def rrsp_interest(request):
+    return request.param
+
 def test_apply_tax(gross_salary, rrsp):
     if (rrsp > gross_salary):
         return # 
@@ -28,8 +32,8 @@ def test_apply_tax(gross_salary, rrsp):
 
     assert expected_income_tax == delta.tax
 
-def test_apply_tax_refund(gross_salary, rrsp):
-    previous_actual_taxable_income = gross_salary - rrsp
+def test_apply_tax_refund(gross_salary, rrsp, rrsp_interest):
+    previous_actual_taxable_income = gross_salary - rrsp + rrsp_interest
 
     paid_tax = tax.get_income_tax(gross_salary)
     correct_tax = tax.get_income_tax(previous_actual_taxable_income)
@@ -38,6 +42,7 @@ def test_apply_tax_refund(gross_salary, rrsp):
     previous_delta = model.deltas_state.from_year(1999)
     previous_delta = previous_delta.update_gross_salary(gross_salary)
     previous_delta = previous_delta.update_rrsp(rrsp)
+    previous_delta = previous_delta.update_rrsp_interest(rrsp_interest)
     previous_delta = natural_rules.apply_tax(previous_delta, None, None)
 
     delta = model.deltas_state.from_year(2000)

@@ -134,8 +134,8 @@ class deltas_state:
 
     @property
     def taxable_income(self):
-        """Taxable portion of salary, ie less the RRSP contribution."""
-        return self.gross_salary - self.rrsp
+        """Taxable portion of salary, ie less the RRSP contribution (or mas the withdrawal), plus any interest earned on RRSP savings (TFSA interest isn't taxed)."""
+        return self.gross_salary - self.rrsp + self.rrsp_interest
 
     @property
     def undifferentiated_savings(self):
@@ -148,7 +148,7 @@ def get_updated_funds_from_deltas(previous_funds: funds_state, deltas: deltas_st
 
        RRSP contributions and interest are added to the RRSP, TFSA contributions and interest are added to the TFSA."""
     assert deltas.year == previous_funds.year + 1
-    return funds_state(previous_funds.rrsp_savings + deltas.rrsp + deltas._rrsp_interest, previous_funds.tfsa_savings + deltas.tfsa + deltas._tfsa_interest, deltas.year)
+    return funds_state(previous_funds.rrsp_savings + deltas.rrsp + deltas.rrsp_interest, previous_funds.tfsa_savings + deltas.tfsa + deltas.tfsa_interest, deltas.year)
 
 
 def get_updated_deltas_from_rules(previous_funds: funds_state, previous_deltas: deltas_state, rules):

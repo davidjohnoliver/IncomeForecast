@@ -17,7 +17,7 @@ def apply_tax_refund(deltas: model.deltas_state, previous_funds: model.funds_sta
     """
     post_rrsp_tax = tax.get_income_tax(previous_deltas.taxable_income)
     diff = previous_deltas.tax - post_rrsp_tax
-    if previous_deltas.rrsp > 0 and previous_deltas.tax > 0:
+    if previous_deltas.rrsp > 0 and previous_deltas.tax > 0 and previous_deltas.rrsp_interest < previous_deltas.rrsp:
         assert diff > 0
         
     return deltas.update_tax_refund(diff)
