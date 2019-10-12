@@ -1,4 +1,5 @@
 import pytest
+import math
 import model
 import natural_rules
 import tax
@@ -45,3 +46,18 @@ def test_apply_tax_refund(gross_salary, rrsp):
 
     assert expected_refund == delta.tax_refund
 
+def test_calculate_investment_interest():
+    rule = natural_rules.get_calculate_investment_interest(rrsp_interest_rate=0.04, tfsa_interest_rate=0.07)
+
+    previous_funds = model.funds_state(12000, 19000, 1672)
+
+    delta = model.deltas_state.from_year(1673)
+    delta = rule(delta, previous_funds, None)
+
+    assert math.isclose(480, delta.rrsp_interest)
+    assert math.isclose(1330, delta.tfsa_interest)
+
+    funds = model.get_updated_funds_from_deltas(previous_funds, delta)
+
+    assert math.isclose(12480, funds.rrsp_savings)
+    assert math.isclose(20330, funds.tfsa_savings)
