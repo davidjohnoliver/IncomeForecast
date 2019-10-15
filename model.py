@@ -7,6 +7,11 @@ import utils
 class funds_state:
     """Stores total RRSP savings and total TFSA savings for a given year."""
 
+    @property
+    def total_savings(self):
+        """Total savings across all classes."""
+        return self.rrsp_savings + self.tfsa_savings
+
     def __init__(self, rrsp_savings, tfsa_savings, year):
         self.rrsp_savings = rrsp_savings
         self.tfsa_savings = tfsa_savings
