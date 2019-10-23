@@ -68,6 +68,21 @@ class Simulation:
     @initial_savings_tfsa.setter
     def initial_savings_tfsa(self, value):
         self._initial_savings_tfsa = value
+    
+    @property
+    def required_initial_spending(self):
+        """
+        The initial spending required to achieve the desired final savings.
+        
+        Before the simulation has been run, this will be -1.
+        """
+        if (self._solution_run is None):
+            return -1
+        
+        return self._solution_run._initial_spending
+    
+    def __init__(self):
+        self._solution_run = None
 
     def set_rules(self, rules):
         """
@@ -84,11 +99,32 @@ class Simulation:
         """
         self._retirement_rules = rules
 
+    def set_solver(self, solver):
+        """
+        Sets the solver that will be used to find the required initial savings, and the corresponding simulation run. The signature of a solver is:
+        def solver(intermediate_fn, model_fn, target_output : float, initial_lower_bound : float, initial_upper_bound : float, tolerance : float):
+        """
+        self._solver = solver
+
     def run(self):
         """
-        Runs the simulation and returns the required savings rate.
+        Runs the simulation and calculates the required savings rate.
         """
-        raise NotImplementedError
+        
+        def create_run(initial_spending : float):
+            return Simulation_Run(self, initial_spending)
+        
+        def run_model(simulation_run : Simulation_Run):
+            simulation_run.run()
+            return simulation_run.final_funds.total_savings
+        
+        tolerance = 0.001
+        _, solution_run = self._solver(create_run, run_model, self.savings_at_death, 0, self.initial_salary, tolerance)
+        self._set_solution_run(solution_run)
+    
+    def _set_solution_run(self, solution_run : 'Simulation_Run'):
+        self._solution_run = solution_run
+
 
 class Simulation_Run:
     """
