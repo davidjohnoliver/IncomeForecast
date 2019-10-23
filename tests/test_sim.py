@@ -35,17 +35,17 @@ def test_simulation_run():
     simulation.set_rules([ constant_salary, constant_spending, split50_50 ])
     simulation.set_retirement_rules([ retirement_spending, split50_50 ])
 
-    run = sim.Simulation_Run(simulation, initial_spending)
+    simulation_run = sim.Simulation_Run(simulation, initial_spending)
 
-    run.run()
+    simulation_run.run()
     # A ver: initial (rrsp) = 4k; 30 x (53k - 42k) = 30 x 11k = 330k; 10 x 29k = 290k; final savings = 44k
-    assert 334000 == run.funds_at_retirement.total_savings
-    assert 169000 == run.funds_at_retirement.rrsp_savings
-    assert 165000 == run.funds_at_retirement.tfsa_savings
+    assert 334000 == simulation_run.funds_at_retirement.total_savings
+    assert 169000 == simulation_run.funds_at_retirement.rrsp_savings
+    assert 165000 == simulation_run.funds_at_retirement.tfsa_savings
 
-    assert 44000 == run.final_funds.total_savings
-    assert 24000 == run.final_funds.rrsp_savings
-    assert 20000 == run.final_funds.tfsa_savings
+    assert 44000 == simulation_run.final_funds.total_savings
+    assert 24000 == simulation_run.final_funds.rrsp_savings
+    assert 20000 == simulation_run.final_funds.tfsa_savings
 
 def test_simulation():
     simulation = sim.Simulation()
