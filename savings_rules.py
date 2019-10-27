@@ -50,7 +50,7 @@ def get_simple_retirement_deduction(retirement_year: int, year_of_death: int):
         spending = -deltas.undifferentiated_savings # We expect undifferentiated_savings to be a negative value, with contributions from
             # spending (retirement income) + tax owed on last year's RRSP withdrawal
         remaining_rrsp = previous_funds.rrsp_savings
-        rrsp_allotment = remaining_rrsp / years_remaining # Try to distribute RRSP withdrawals evenly to minimize marginal tax
+        rrsp_allotment = remaining_rrsp / (years_remaining + 1) # Try to distribute RRSP withdrawals evenly to minimize marginal tax
         rrsp_withdrawal = max(min(spending, rrsp_allotment), 0) # Don't let the RRSP go below 0. This is mainly to try to cut down on weird edge 
             # cases; if final savings is below 0 for any given run we don't care that much, the outer simulation will simply discard that run.
         tfsa_withdrawal = spending - rrsp_withdrawal
