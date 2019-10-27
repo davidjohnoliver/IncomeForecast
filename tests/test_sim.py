@@ -5,7 +5,7 @@ import math
 
 def test_simulation_run():
     simulation = sim.Simulation()
-    simulation.retirement_age = 60 # So, 2050
+    simulation.age_at_retirement = 60 # So, 2050
     simulation.year_of_birth = 1990
     simulation.initial_year = 2020
     simulation.age_at_death = 70 # Smoker?
@@ -49,7 +49,7 @@ def test_simulation_run():
 
 def test_simulation():
     simulation = sim.Simulation()
-    simulation.retirement_age = 60 # So, 2050
+    simulation.age_at_retirement = 60 # So, 2050
     simulation.year_of_birth = 1990
     simulation.initial_year = 2020
     simulation.age_at_death = 70 # Smoker?

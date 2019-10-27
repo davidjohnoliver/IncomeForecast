@@ -6,12 +6,12 @@ class Simulation:
     """
 
     @property
-    def retirement_age(self):
+    def age_at_retirement(self):
         """The age at which you will retire. (Inclusive, ie this is the first year you will no longer be working.)"""
-        return self._retirement_age
-    @retirement_age.setter
-    def retirement_age(self, value):
-        self._retirement_age = value
+        return self._age_at_retirement
+    @age_at_retirement.setter
+    def age_at_retirement(self, value):
+        self._age_at_retirement = value
 
     @property
     def year_of_birth(self):
@@ -68,6 +68,14 @@ class Simulation:
     @initial_savings_tfsa.setter
     def initial_savings_tfsa(self, value):
         self._initial_savings_tfsa = value
+
+    @property
+    def year_of_retirement(self):
+        return self.year_of_birth + self.age_at_retirement
+
+    @property
+    def year_of_death(self):
+        return self.year_of_birth + self.age_at_death
     
     @property
     def required_initial_spending(self):
@@ -163,8 +171,8 @@ class Simulation_Run:
         Run the simulation and set final funds.
         """
         initial_year = self._parent.initial_year
-        year_of_retirement = self._parent.year_of_birth + self._parent.retirement_age
-        year_of_death = self._parent.year_of_birth + self._parent.age_at_death
+        year_of_retirement = self._parent.year_of_retirement
+        year_of_death = self._parent.year_of_death
 
         initial_funds_state = model.funds_state(self._parent._initial_savings_rrsp, self._parent._initial_savings_tfsa, initial_year)
         initial_deltas_state = model.deltas_state(
@@ -192,6 +200,8 @@ class Simulation_Run:
             previous_funds = funds
 
         self._funds_at_retirement = funds
+
+        assert year_of_retirement == self._funds_at_retirement.year
         
         for _ in range(year_of_retirement, year_of_death): # Live off of savings up until death
             deltas = model.get_updated_deltas_from_rules(previous_funds, previous_deltas, self._parent._retirement_rules)
