@@ -15,9 +15,11 @@ def get_luxury_over_basic(base_spending: float, luxury_compound_rate: float):
     def luxury_over_basic(deltas: model.deltas_state, previous_funds: model.funds_state, previous_deltas: model.deltas_state):
         previous_luxury = previous_deltas.spending - base_spending
         if (previous_luxury < 0):
-            raise ValueError(
-                'previous_deltas.spending must be greater than base_spending')
-
+                # Try to somehow handle spending below the 'basic level,' since the solver will try spendings from 0 upwards. Consumer code 
+                # is responsible for warning the user if the actual solution returns a spending below the 'basic' level.
+                new_spending = (1 + luxury_compound_rate) * previous_deltas.spending
+                return deltas.update_spending(new_spending)
+        
         new_luxury = (1 + luxury_compound_rate) * previous_luxury
         return deltas.update_spending(base_spending + new_luxury)
 
