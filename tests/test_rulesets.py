@@ -19,7 +19,7 @@ def test_v1_runs():
 
     simulation.set_solver(solve.binary_solver)
 
-    career_rules, retirement_rules = rulesets.v1(
+    career_rules, retirement_rules = rulesets.ampere(
         salary_compound_rate=0.05,
         salary_plateau=70000,
         base_spending=30000,

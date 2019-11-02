@@ -6,7 +6,7 @@ import salary_rules
 import savings_rules
 import spending_rules
 
-def v1(
+def ampere(
     salary_compound_rate : float, 
     salary_plateau : float, 
     base_spending : float, 
