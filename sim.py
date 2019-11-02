@@ -1,5 +1,6 @@
 import model
 import typing
+import natural_rules
 
 class Simulation:
     """
@@ -197,6 +198,8 @@ class Simulation_Run:
             tfsa_interest=0,
             tax_refund=0
         )
+
+        initial_deltas_state = natural_rules.apply_tax(initial_deltas_state, None, None)
 
         previous_deltas = initial_deltas_state
         previous_funds = initial_funds_state
