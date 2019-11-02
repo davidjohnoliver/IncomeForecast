@@ -48,9 +48,32 @@ class Simulation_Presenter:
     def career_salary_series(self):
         """Salary series pre-retirement"""
         return [d.gross_salary for d in self._simulation.all_deltas if d.year <= self._simulation.year_of_retirement]
+           
+    @property
+    def career_net_income_series(self):
+        """Net income series pre-retirement"""
+        return [d.total_net_income for d in self._simulation.all_deltas if d.year <= self._simulation.year_of_retirement]
+    
+    @property
+    def career_rrsp_contribution_series(self):
+        """p"""
+        return [d.rrsp for d in self._simulation.all_deltas if d.year <= self._simulation.year_of_retirement]
+    
+    @property
+    def career_tfsa_contribution_series(self):
+        """p"""
+        return [d.tfsa for d in self._simulation.all_deltas if d.year <= self._simulation.year_of_retirement]
     
     # Retirement
     @property
     def retirement_years_series(self):
         """Years series post-retirement"""
         return [f.year for f in self._simulation.all_funds if f.year > self._simulation.year_of_retirement]
+
+    @property
+    def retirement_rrsp_withdrawal_series(self):
+        return [-d.rrsp for d in self._simulation.all_deltas if d.year > self._simulation.year_of_retirement]
+
+    @property
+    def retirement_tfsa_withdrawal_series(self):
+        return [-d.tfsa for d in self._simulation.all_deltas if d.year > self._simulation.year_of_retirement]
