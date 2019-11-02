@@ -3,6 +3,10 @@ import sim
 class Simulation_Presenter:
     def __init__(self, simulation : sim.Simulation):
         self._simulation = simulation
+
+    @property
+    def year_of_retirement(self):
+        return self._simulation.year_of_retirement
     
     @property
     def years_series(self):
