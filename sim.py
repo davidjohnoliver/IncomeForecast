@@ -1,4 +1,5 @@
 import model
+import typing
 
 class Simulation:
     """
@@ -88,6 +89,16 @@ class Simulation:
             return -1
         
         return self._solution_run._initial_spending
+
+    @property
+    def all_funds(self):
+        """A list of all funds_states for the solution run, in order of year."""
+        return self._solution_run.all_funds
+
+    @property
+    def all_deltas(self):
+        """A list of all deltas_states for the solution run, in order of year."""
+        return self._solution_run.all_deltas
     
     def __init__(self):
         self._solution_run = None
@@ -157,12 +168,12 @@ class Simulation_Run:
         return self._funds_at_retirement
 
     @property
-    def all_funds(self):
+    def all_funds(self) -> typing.List[model.funds_state]:
         """A list of all funds_states for the run, in order of year."""
         return self._all_funds
 
     @property
-    def all_deltas(self):
+    def all_deltas(self) -> typing.List[model.deltas_state]:
         """A list of all deltas_states for the run, in order of year."""
         return self._all_deltas
 
