@@ -24,12 +24,13 @@ def get_career_rules(salary_rule, spending_rule, savings_rule, rrsp_interest_rat
         natural_rules.apply_tax_refund,
         natural_rules.get_calculate_investment_interest(rrsp_interest_rate, tfsa_interest_rate),
 
-        # We assume these have no current-year dependencies
+        # Assume no current-year dependencies
         salary_rule,
-        spending_rule,
-
         #Depends on deltas.gross_salary (ie salary_rule)
         natural_rules.apply_tax,
+
+        # May depend on salary and tax
+        spending_rule,
 
         # Depends on pretty much everything else
         savings_rule
