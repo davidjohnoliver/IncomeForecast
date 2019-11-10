@@ -20,10 +20,11 @@ def test_binary_solver():
         x = intermediate.my_float
         return 2 * x - 7
 
-    x_t, i_t = solve.binary_solver(transform, model_fn, 12, -100, 100, 0.00001)
+    x_t, i_t, s_t = solve.binary_solver(transform, model_fn, 12, -100, 100, 0.00001)
 
     assert x_t == i_t.my_float
     assert math.isclose(9.5, x_t, rel_tol=0.0001)
+    assert s_t
 
 def test_binary_solver_negative_slope():
     def model_fn(intermediate : My_Intermediate):
@@ -32,7 +33,8 @@ def test_binary_solver_negative_slope():
     
     target = 44.7
 
-    x_t, i_t = solve.binary_solver(transform, model_fn, target, -122, 217, 0.00001)
+    x_t, i_t, s_t = solve.binary_solver(transform, model_fn, target, -122, 217, 0.00001)
 
     assert x_t == i_t.my_float
     assert math.isclose(-7.08333333333, x_t, rel_tol=0.0001)
+    assert s_t

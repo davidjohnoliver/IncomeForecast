@@ -100,9 +100,15 @@ class Simulation:
     def all_deltas(self):
         """A list of all deltas_states for the solution run, in order of year."""
         return self._solution_run.all_deltas
+
+    @property
+    def was_solution_found(self):
+        """True if running the simulation found a solution for given inputs, false if no valid solution was found, None if simulation was not run yet."""
+        return self._was_solution_found
     
     def __init__(self):
         self._solution_run = None
+        self._was_solution_found = None
 
     def set_rules(self, rules):
         """
@@ -139,11 +145,12 @@ class Simulation:
             return simulation_run.final_funds.total_savings
         
         tolerance = 0.001
-        _, solution_run = self._solver(create_run, run_model, self.savings_at_death, 0, self.initial_salary, tolerance)
-        self._set_solution_run(solution_run)
+        _, solution_run, was_solution_found = self._solver(create_run, run_model, self.savings_at_death, 0, self.initial_salary, tolerance)
+        self._set_solution_run(solution_run, was_solution_found)
     
-    def _set_solution_run(self, solution_run : 'Simulation_Run'):
+    def _set_solution_run(self, solution_run : 'Simulation_Run', was_solution_found : bool):
         self._solution_run = solution_run
+        self._was_solution_found = was_solution_found
 
 
 class Simulation_Run:

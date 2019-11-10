@@ -14,7 +14,9 @@ def binary_solver(intermediate_fn, model_fn, target_output : float, initial_lowe
     :type initial_upper_bound: float
     :param tolerance: The allowable deviation from the target and final calculated output
     :type tolerance: float
-    :return: A tuple of (solution input, intermediate_fn(solution input))
+    :return: A tuple of (solution input, intermediate_fn(solution input), was_solution_found : bool)
+
+    If no solution is found, the last calculated guess and intermediate product will be returned, with was_solution_found=false
     """
     if initial_lower_bound == initial_upper_bound:
         raise ValueError(f"Lower bound ({initial_lower_bound}) and upper bound ({initial_upper_bound}) are identical.")
@@ -41,13 +43,19 @@ def binary_solver(intermediate_fn, model_fn, target_output : float, initial_lowe
     guess = 0
     guess_intermediate = None
 
+    eps = tolerance * 1e-5
+
     while abs(guess_output - target_output) > tolerance:
         guess = (lower_guess + upper_guess) / 2
         guess_intermediate = intermediate_fn(guess)
         guess_output = model_fn(guess_intermediate)
+        if abs(lower_guess - upper_guess) < eps:
+            # No solution found, return the last thing we got
+            return (guess, guess_intermediate, False)
         if guess_output > target_output:
             upper_guess = guess
         else:
             lower_guess = guess
     
-    return (guess, guess_intermediate)
+    # We got a valid solution
+    return (guess, guess_intermediate, True)
