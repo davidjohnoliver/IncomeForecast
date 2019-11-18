@@ -66,9 +66,12 @@ class Optimizing_Solver:
     """
     Wraps a simulation solver and allows any number of variables to be optimized (for minimum initial input).
     """
+    
+    PENALTY_BASE = 1e30
 
-    def __init__(self, inner_solver):
+    def __init__(self, inner_solver, should_invert : bool):
         self._inner_solver = inner_solver
+        self._should_invert = should_invert
 
         self._variable_names = []
         self._bounds = []
@@ -122,7 +125,11 @@ class Optimizing_Solver:
             self._x = x
             self._output = self._inner_solver(intermediate_fn, model_fn, target_output, initial_lower_bound, initial_upper_bound, tolerance)
             f = self._output[0]
-            return self._apply_soft_bounds(f, x)
+            f = self._apply_soft_bounds(f, x)
+            if (not self._output[2]):
+                # Penalize invalid solution, so that optimizer doesn't try to use it
+                f += self.PENALTY_BASE
+            return -f if self._should_invert else f
         
         opt_result = scipy.optimize.minimize(minimize_func, self._x0, method='Nelder-Mead', tol = tolerance) 
         # Nelder-Mead is robust to non-smooth functions, which is important because the output of the inner solver tends to be 'staircase-like' 
@@ -138,7 +145,6 @@ class Optimizing_Solver:
         """
         Apply 'soft' bounds to the objective function, since the Nelder-Mead method doesn't support true bounds.
         """
-        PENALTY_BASE = 1e30
         for i in range(0, len(x)):
             bnds = self._bounds[i]
             v = x[i]
@@ -146,11 +152,11 @@ class Optimizing_Solver:
             lower_bound = bnds[0]
             if (lower_bound is not None and v < lower_bound):
                 diff = lower_bound - v
-                f += PENALTY_BASE + 100 * diff
+                f += self.PENALTY_BASE + 100 * diff
         
             upper_bound = bnds[1]
             if (upper_bound is not None and v > upper_bound):
                 diff = v - upper_bound
-                f += PENALTY_BASE + 100 * diff
+                f += self.PENALTY_BASE + 100 * diff
 
         return f

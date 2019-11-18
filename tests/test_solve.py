@@ -44,7 +44,7 @@ def test_optimizing_solver_no_optimized_value():
         x = intermediate.my_float
         return 2 * x - 7
 
-    opt = solve.Optimizing_Solver(solve.binary_solver)
+    opt = solve.Optimizing_Solver(solve.binary_solver, should_invert = False)
 
     x_t, i_t, s_t = opt.solve(transform, model_fn, 12, -100, 100, 0.00001)
 
@@ -53,7 +53,7 @@ def test_optimizing_solver_no_optimized_value():
     assert s_t
 
 def test_optimizing_solver():
-    opt = solve.Optimizing_Solver(solve.binary_solver)
+    opt = solve.Optimizing_Solver(solve.binary_solver, should_invert = False)
 
     optimized_scalar1 = opt.subscribe_optimized_scalar("Rugosity", lower_bound=-20, upper_bound=10)
     optimized_scalar2 = opt.subscribe_optimized_scalar("Tripticity", lower_bound=-90, upper_bound=-5)
@@ -74,7 +74,7 @@ def test_optimizing_solver():
     assert math.isclose(-8.5, opt.get_optimized_value("Tripticity"), rel_tol=0.0001)
 
 def test_optimizing_solver_bounded():
-    opt = solve.Optimizing_Solver(solve.binary_solver)
+    opt = solve.Optimizing_Solver(solve.binary_solver, should_invert = False)
 
     optimized_scalar1 = opt.subscribe_optimized_scalar("Rugosity", lower_bound=-20, upper_bound=10)
     optimized_scalar2 = opt.subscribe_optimized_scalar("Tripticity", lower_bound=-90, upper_bound=-10.3)
