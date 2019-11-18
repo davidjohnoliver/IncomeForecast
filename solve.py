@@ -1,3 +1,5 @@
+from typing import Callable
+import scipy.optimize
 
 def binary_solver(intermediate_fn, model_fn, target_output : float, initial_lower_bound : float, initial_upper_bound : float, tolerance : float):
     """
@@ -59,3 +61,96 @@ def binary_solver(intermediate_fn, model_fn, target_output : float, initial_lowe
     
     # We got a valid solution
     return (guess, guess_intermediate, True)
+
+class Optimizing_Solver:
+    """
+    Wraps a simulation solver and allows any number of variables to be optimized (for minimum initial input).
+    """
+
+    def __init__(self, inner_solver):
+        self._inner_solver = inner_solver
+
+        self._variable_names = []
+        self._bounds = []
+        self._x0 = []
+        self._x = []
+        self._x_sol = []
+        self._optimize_values = 0
+        self._output = ()
+
+    def subscribe_optimized_scalar(self, variable_name : str, lower_bound : float = None, upper_bound : float = None, initial_guess : float = None) -> Callable[[], float]:
+        """
+        Registers a variable to be optimized.
+        
+        :param variable_name: An identifier for the variable to be optimized.
+        :type variable_name: str
+        :param lower_bound: An optional lower bound for the variable, defaults to None
+        :type lower_bound: float, optional
+        :param upper_bound: An optional upper bound for the variable, defaults to None
+        :type upper_bound: float, optional
+        :param initial_guess: An optional initial guess for the variable - if this is not supplied, the average of lower and upper bounds will be used, defaults to None
+        :type initial_guess: float, optional
+        :return: A function that returns the current guess for the variable.
+        :rtype: Callable[[], float]
+        """
+        self._variable_names.append(variable_name)
+        self._bounds.append((lower_bound, upper_bound))
+        x0 = initial_guess if initial_guess is not None else (lower_bound + upper_bound) / 2.0
+        self._x0.append(x0)
+        i = self._optimize_values
+        self._optimize_values +=1
+        return lambda: self._x[i]
+    
+    def get_optimized_value(self, variable_name : str):
+        """
+        Gets the optimum value found for the named variable.
+        
+        :param variable_name: Variable name
+        :type variable_name: str
+        :return: Optimized value
+        :rtype: [type]
+        """
+        i = self._variable_names.index(variable_name)
+        return self._x_sol[i]
+    
+    def solve(self, intermediate_fn, model_fn, target_output : float, initial_lower_bound : float, initial_upper_bound : float, tolerance : float):
+        if (self._optimize_values == 0):
+            # In the trivial case that no optimized values have been requested, just return the result of the inner solver
+            return self._inner_solver(intermediate_fn, model_fn, target_output, initial_lower_bound, initial_upper_bound, tolerance)
+        
+        def minimize_func(x):
+            self._x = x
+            self._output = self._inner_solver(intermediate_fn, model_fn, target_output, initial_lower_bound, initial_upper_bound, tolerance)
+            f = self._output[0]
+            return self._apply_soft_bounds(f, x)
+        
+        opt_result = scipy.optimize.minimize(minimize_func, self._x0, method='Nelder-Mead', tol = tolerance) 
+        # Nelder-Mead is robust to non-smooth functions, which is important because the output of the inner solver tends to be 'staircase-like' 
+        # unless the tolerance is very precise, resulting in the initial guess being returned as answer
+        # See eg https://stackoverflow.com/questions/36110998/why-does-scipy-optimize-minimize-default-report-success-without-moving-with-sk
+
+        self._x_sol = opt_result.x
+
+        output = self._output
+        return (output[0], output[1], output[2] and opt_result.success)
+    
+    def _apply_soft_bounds(self, f : float, x):
+        """
+        Apply 'soft' bounds to the objective function, since the Nelder-Mead method doesn't support true bounds.
+        """
+        PENALTY_BASE = 1e30
+        for i in range(0, len(x)):
+            bnds = self._bounds[i]
+            v = x[i]
+
+            lower_bound = bnds[0]
+            if (lower_bound is not None and v < lower_bound):
+                diff = lower_bound - v
+                f += PENALTY_BASE + 100 * diff
+        
+            upper_bound = bnds[1]
+            if (upper_bound is not None and v > upper_bound):
+                diff = v - upper_bound
+                f += PENALTY_BASE + 100 * diff
+
+        return f
