@@ -1,4 +1,5 @@
 import model
+from typing import Callable
 
 def get_simple_linear(initial_rrsp: float, final_rrsp: float, initial_year: int, career_length_yrs: int):
     """
@@ -7,16 +8,29 @@ def get_simple_linear(initial_rrsp: float, final_rrsp: float, initial_year: int,
     s[y] = a + b*(y - y_0), where s = RRSP allotment (normalized), a = initial_rrsp (normalized value), 
                 b = (final_rrsp - initial_rrsp) / career_length_yrs, y_0 = initial_year, y = current year
     """
+    return get_simple_linear_func(lambda: initial_rrsp, lambda: final_rrsp, initial_year, career_length_yrs)
 
-    if not (0 <= initial_rrsp <= 1):
-        raise ValueError("initial_rrsp must be between 0 and 1")
 
-    if not (0 <= final_rrsp <= 1):
-        raise ValueError("final_rrsp must be between 0 and 1")
+def get_simple_linear_func(initial_rrsp_func: Callable[[], float], final_rrsp_func: Callable[[], float], initial_year: int, career_length_yrs: int):
+    """
+    Sets the split between RRSP and TFSA as a linear function of time. Takes generator functions for initial_rrsp and final_rrsp to facilitate optimization.
 
-    slope = (final_rrsp - initial_rrsp) / career_length_yrs # TODO: fix ensuing off-by-one errors
+    s[y] = a + b*(y - y_0), where s = RRSP allotment (normalized), initial_rrsp = initial_rrsp_func(), final_rrsp = final_rrsp_func(),
+        a = initial_rrsp (normalized value), b = (final_rrsp - initial_rrsp) / career_length_yrs, y_0 = initial_year, y = current year
+    """
 
     def simple_linear(deltas: model.deltas_state, previous_funds: model.funds_state, previous_deltas: model.deltas_state):
+        initial_rrsp = initial_rrsp_func()
+        final_rrsp = final_rrsp_func()
+
+        if not (0 <= initial_rrsp <= 1):
+            raise ValueError("initial_rrsp must be between 0 and 1")
+
+        if not (0 <= final_rrsp <= 1):
+            raise ValueError("final_rrsp must be between 0 and 1")
+
+        slope = (final_rrsp - initial_rrsp) / career_length_yrs
+
         years_elapsed = deltas.year - initial_year
 
         if not (0 <= years_elapsed <= career_length_yrs):
