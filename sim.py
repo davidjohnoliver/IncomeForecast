@@ -145,7 +145,7 @@ class Simulation:
             return simulation_run.final_funds.total_savings
         
         tolerance = 0.001
-        _, solution_run, was_solution_found = self._solver(create_run, run_model, self.savings_at_death, 0, self.initial_salary, tolerance)
+        _, solution_run, was_solution_found, _ = self._solver(create_run, run_model, self.savings_at_death, 0, self.initial_salary, tolerance)
         self._set_solution_run(solution_run, was_solution_found)
     
     def _set_solution_run(self, solution_run : 'Simulation_Run', was_solution_found : bool):

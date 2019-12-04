@@ -20,11 +20,12 @@ def test_binary_solver():
         x = intermediate.my_float
         return 2 * x - 7
 
-    x_t, i_t, s_t = solve.binary_solver(transform, model_fn, 12, -100, 100, 0.00001)
+    x_t, i_t, s_t, msg = solve.binary_solver(transform, model_fn, 12, -100, 100, 0.00001)
 
     assert x_t == i_t.my_float
     assert math.isclose(9.5, x_t, rel_tol=0.0001)
     assert s_t
+    assert "Success" == msg
 
 def test_binary_solver_negative_slope():
     def model_fn(intermediate : My_Intermediate):
@@ -33,11 +34,12 @@ def test_binary_solver_negative_slope():
     
     target = 44.7
 
-    x_t, i_t, s_t = solve.binary_solver(transform, model_fn, target, -122, 217, 0.00001)
+    x_t, i_t, s_t, msg = solve.binary_solver(transform, model_fn, target, -122, 217, 0.00001)
 
     assert x_t == i_t.my_float
     assert math.isclose(-7.08333333333, x_t, rel_tol=0.0001)
     assert s_t
+    assert "Success" == msg
 
 def test_optimizing_solver_no_optimized_value():
     def model_fn(intermediate : My_Intermediate):
@@ -46,7 +48,7 @@ def test_optimizing_solver_no_optimized_value():
 
     opt = solve.Optimizing_Solver(solve.binary_solver, should_invert = False)
 
-    x_t, i_t, s_t = opt.solve(transform, model_fn, 12, -100, 100, 0.00001)
+    x_t, i_t, s_t, _ = opt.solve(transform, model_fn, 12, -100, 100, 0.00001)
 
     assert x_t == i_t.my_float
     assert math.isclose(9.5, x_t, rel_tol=0.0001)
@@ -65,7 +67,7 @@ def test_optimizing_solver():
         return 2 * x - 7 - abs(r - 3.1)  - abs (t + 8.5)
 
 
-    x_t, i_t, s_t = opt.solve(transform, model_fn, 12, -100, 100, 1e-5)
+    x_t, i_t, s_t, _ = opt.solve(transform, model_fn, 12, -100, 100, 1e-5)
 
     assert x_t == i_t.my_float
     assert math.isclose(9.5, x_t, rel_tol=0.0001)
@@ -86,7 +88,7 @@ def test_optimizing_solver_bounded():
         return 2 * x - 7 - abs(r - 3.1)  - abs (t + 8.5)
 
 
-    x_t, i_t, s_t = opt.solve(transform, model_fn, 12, -100, 100, 1e-5)
+    x_t, i_t, s_t, _ = opt.solve(transform, model_fn, 12, -100, 100, 1e-5)
 
     assert x_t == i_t.my_float
     assert math.isclose(10.4, x_t, rel_tol=0.0001) # t = -10.3, 2x - 7 - (10.3 - 8.5) = 12, 2x = 20.8, x = 10.4

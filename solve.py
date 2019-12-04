@@ -16,12 +16,12 @@ def binary_solver(intermediate_fn, model_fn, target_output : float, initial_lowe
     :type initial_upper_bound: float
     :param tolerance: The allowable deviation from the target and final calculated output
     :type tolerance: float
-    :return: A tuple of (solution input, intermediate_fn(solution input), was_solution_found : bool)
+    :return: A tuple of (solution input, intermediate_fn(solution input), was_solution_found : bool, message : str)
 
     If no solution is found, the last calculated guess and intermediate product will be returned, with was_solution_found=false
     """
     if initial_lower_bound == initial_upper_bound:
-        raise ValueError(f"Lower bound ({initial_lower_bound}) and upper bound ({initial_upper_bound}) are identical.")
+        return (None, None, False, f"Lower bound ({initial_lower_bound}) and upper bound ({initial_upper_bound}) are identical.")
 
     lower_bound_intermediate = intermediate_fn(initial_lower_bound)
     upper_bound_intermediate = intermediate_fn(initial_upper_bound)
@@ -29,7 +29,7 @@ def binary_solver(intermediate_fn, model_fn, target_output : float, initial_lowe
     upper_bound_output = model_fn(upper_bound_intermediate)
 
     if lower_bound_output == upper_bound_output:
-        raise ValueError("Model outputs are equal for lower and upper input bounds. The model function should be a non-flat monotonic function. ")
+        return (initial_lower_bound, lower_bound_intermediate, False, "Model outputs are equal for lower and upper input bounds. The model function should be a non-flat monotonic function. ")
 
     lower_guess = 0
     upper_guess = 0
@@ -53,14 +53,14 @@ def binary_solver(intermediate_fn, model_fn, target_output : float, initial_lowe
         guess_output = model_fn(guess_intermediate)
         if abs(lower_guess - upper_guess) < eps:
             # No solution found, return the last thing we got
-            return (guess, guess_intermediate, False)
+            return (guess, guess_intermediate, False, "Exhausted value range and no solution found")
         if guess_output > target_output:
             upper_guess = guess
         else:
             lower_guess = guess
     
     # We got a valid solution
-    return (guess, guess_intermediate, True)
+    return (guess, guess_intermediate, True, "Success")
 
 class Optimizing_Solver:
     """
@@ -153,7 +153,7 @@ class Optimizing_Solver:
         self._x_sol = opt_result.x
 
         output = self._output
-        return (output[0], output[1], output[2] and opt_result.success)
+        return (output[0], output[1], output[2] and opt_result.success, output[3])
     
     def _apply_soft_bounds(self, f : float, x):
         """
