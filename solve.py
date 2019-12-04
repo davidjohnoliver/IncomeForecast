@@ -116,6 +116,12 @@ class Optimizing_Solver:
         i = self._variable_names.index(variable_name)
         return self._x_sol[i]
     
+    def set_failed(self):
+        """
+        When called by an optimizable routine, indicates that the routine has reached an invalid state that shouldn't be counted as a solution.
+        """
+        self._did_fail = True
+    
     def solve(self, intermediate_fn, model_fn, target_output : float, initial_lower_bound : float, initial_upper_bound : float, tolerance : float):
         if (self._optimize_values == 0):
             # In the trivial case that no optimized values have been requested, just return the result of the inner solver
@@ -123,10 +129,11 @@ class Optimizing_Solver:
         
         def minimize_func(x):
             self._x = x
+            self._did_fail = False
             self._output = self._inner_solver(intermediate_fn, model_fn, target_output, initial_lower_bound, initial_upper_bound, tolerance)
             f = self._output[0]
             f = self._apply_soft_bounds(f, x)
-            if (not self._output[2]):
+            if (not self._output[2] or self._did_fail):
                 # Penalize invalid solution, so that optimizer doesn't try to use it
                 f += self.PENALTY_BASE
             return -f if self._should_invert else f
