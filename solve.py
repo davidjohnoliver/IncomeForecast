@@ -116,6 +116,13 @@ class Optimizing_Solver:
         i = self._variable_names.index(variable_name)
         return self._x_sol[i]
     
+    def get_all_optimized_values(self):
+        """
+        Returns a sequence of (variable_name, optimized_value) pairs for all optimized variables
+        """
+
+        return ((self._variable_names[i], self._x_sol[i]) for i in range(0, self._optimize_values))
+    
     def set_failed(self):
         """
         When called by an optimizable routine, indicates that the routine has reached an invalid state that shouldn't be counted as a solution.
