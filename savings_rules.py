@@ -8,10 +8,10 @@ def get_simple_linear(initial_rrsp: float, final_rrsp: float, initial_year: int,
     s[y] = a + b*(y - y_0), where s = RRSP allotment (normalized), a = initial_rrsp (normalized value), 
                 b = (final_rrsp - initial_rrsp) / career_length_yrs, y_0 = initial_year, y = current year
     """
-    return get_simple_linear_func(lambda: initial_rrsp, lambda: final_rrsp, initial_year, career_length_yrs)
+    return get_simple_linear_func(lambda: initial_rrsp, lambda: final_rrsp, initial_year, career_length_yrs, None)
 
 
-def get_simple_linear_func(initial_rrsp_func: Callable[[], float], final_rrsp_func: Callable[[], float], initial_year: int, career_length_yrs: int):
+def get_simple_linear_func(initial_rrsp_func: Callable[[], float], final_rrsp_func: Callable[[], float], initial_year: int, career_length_yrs: int, fail_func: Callable[[], None]):
     """
     Sets the split between RRSP and TFSA as a linear function of time. Takes generator functions for initial_rrsp and final_rrsp to facilitate optimization.
 
@@ -24,10 +24,16 @@ def get_simple_linear_func(initial_rrsp_func: Callable[[], float], final_rrsp_fu
         final_rrsp = final_rrsp_func()
 
         if not (0 <= initial_rrsp <= 1):
-            raise ValueError("initial_rrsp must be between 0 and 1")
+            if fail_func != None:
+                fail_func()
+            else:
+                raise ValueError("initial_rrsp must be between 0 and 1")
 
         if not (0 <= final_rrsp <= 1):
-            raise ValueError("final_rrsp must be between 0 and 1")
+            if fail_func != None:
+                fail_func()
+            else:
+                raise ValueError("final_rrsp must be between 0 and 1")
 
         slope = (final_rrsp - initial_rrsp) / career_length_yrs
 
@@ -37,7 +43,11 @@ def get_simple_linear_func(initial_rrsp_func: Callable[[], float], final_rrsp_fu
             raise ValueError(f"{deltas.year} lies outside the allowed range of years for the rule (initial year={initial_year}, career length={career_length_yrs})")
 
         rrsp_norm = initial_rrsp + slope * years_elapsed        
-        assert 0 <= rrsp_norm <= 1
+        is_in_bounds = 0 <= rrsp_norm <= 1
+        if fail_func != None and not is_in_bounds:
+            fail_func()
+        else:
+            assert is_in_bounds
         tfsa_norm = 1 - rrsp_norm
 
         output = deltas.update_rrsp(deltas.undifferentiated_savings * rrsp_norm)
