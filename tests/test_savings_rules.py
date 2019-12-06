@@ -57,3 +57,24 @@ def test_simple_retirement_deduction_exact_savings():
     assert year_of_death == funds.year
     assert 0 == funds.rrsp_savings
     assert 0 == funds.tfsa_savings
+
+def test_linear_retirement_deduction_func():
+    rule = savings_rules.get__linear_retirement_deduction_func(lambda: 0.2, lambda: 0.8, 2022, 10, None)
+    
+    SPENDING = 40000
+
+    bottomless_funds = model.funds_state(rrsp_savings=1000000, tfsa_savings=1000000, year=0)
+
+    deltas_2022 = model.deltas_state.from_year(2022)
+    deltas_2022 = deltas_2022.update_spending(SPENDING)
+    deltas_2022 = rule(deltas_2022, bottomless_funds, None)
+
+    assert -8000 == deltas_2022.rrsp
+    assert -32000 == deltas_2022.tfsa
+
+    deltas_2023 = model.deltas_state.from_year(2023)
+    deltas_2023 = deltas_2023.update_spending(SPENDING)
+    deltas_2023 = rule(deltas_2023, bottomless_funds, None)
+
+    assert -10400 == deltas_2023.rrsp # -40k * (0.2 + 1*0.6/10)
+    assert -29600 == deltas_2023.tfsa

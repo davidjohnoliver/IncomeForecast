@@ -85,3 +85,19 @@ def get_simple_retirement_deduction(retirement_year: int, year_of_death: int):
         return output
     
     return simple_retirement_deduction
+
+def get__linear_retirement_deduction_func(initial_rrsp_func: Callable[[], float], final_rrsp_func: Callable[[], float], initial_year: int, retirement_length_yrs: int, fail_func: Callable[[], None]):
+    """
+    Deduct from savings to cover retirement income. The split between RRSP and TFSA is made as a linear function of time. Takes generator 
+    functions for initial_rrsp and final_rrsp to facilitate optimization.
+    """
+    inner_rule = get_simple_linear_func(initial_rrsp_func, final_rrsp_func, initial_year, retirement_length_yrs, fail_func)
+
+    def checked_rule(deltas: model.deltas_state, previous_funds: model.funds_state, previous_deltas: model.deltas_state):
+        output = inner_rule(deltas, previous_funds, previous_deltas)
+        if (previous_funds.rrsp_savings + deltas.rrsp < 0):
+            # 
+            fail_func()
+        return output
+    
+    return checked_rule
