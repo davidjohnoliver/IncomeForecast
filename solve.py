@@ -128,11 +128,26 @@ class Optimizing_Solver:
         When called by an optimizable routine, indicates that the routine has reached an invalid state that shouldn't be counted as a solution.
         """
         self._did_fail = True
+
+    @property
+    def initial_output(self):
+        """Returns output for the first valid solution found, for comparison with the final optimized solution."""
+        return self._output_initial
+        
+    def get_all_initial_solution_values(self):
+        """
+        Returns a sequence of (variable_name, optimized_value) pairs for all un-optimized variables corresponding to the first valid solution
+        """
+
+        return ((self._variable_names[i], self._x_initial[i]) for i in range(0, self._optimize_values))
+
     
     def solve(self, intermediate_fn, model_fn, target_output : float, initial_lower_bound : float, initial_upper_bound : float, tolerance : float):
         if (self._optimize_values == 0):
             # In the trivial case that no optimized values have been requested, just return the result of the inner solver
             return self._inner_solver(intermediate_fn, model_fn, target_output, initial_lower_bound, initial_upper_bound, tolerance)
+
+        self._has_initial_solution = False
         
         def minimize_func(x):
             self._x = x
@@ -143,6 +158,13 @@ class Optimizing_Solver:
             if (not self._output[2] or self._did_fail):
                 # Penalize invalid solution, so that optimizer doesn't try to use it
                 f += self.PENALTY_BASE
+            elif not self._has_initial_solution:
+                #
+                self._has_initial_solution = True
+
+                self._output_initial = self._output
+                self._x_initial = x
+            
             return -f if self._should_invert else f
         
         opt_result = scipy.optimize.minimize(minimize_func, self._x0, method='Nelder-Mead', tol = tolerance) 
