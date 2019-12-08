@@ -10,7 +10,7 @@ def test_simulation_run():
     simulation.initial_year = 2020
     simulation.age_at_death = 70 # Smoker?
     simulation.savings_at_death = -1 #Ignored - we're not testing Simulation
-    simulation._initial_savings_rrsp = 4000
+    simulation.initial_savings_rrsp = 4000
     simulation.initial_savings_tfsa = 0
     simulation.initial_salary = 53000
 
@@ -54,7 +54,7 @@ def test_simulation():
     simulation.initial_year = 2020
     simulation.age_at_death = 70 # Smoker?
     simulation.savings_at_death = 44000 # Reverse-engineered from previous test
-    simulation._initial_savings_rrsp = 4000
+    simulation.initial_savings_rrsp = 4000
     simulation.initial_savings_tfsa = 0
     simulation.initial_salary = 53000
 
@@ -94,7 +94,7 @@ def test_simulation_optimizing_solver_unoptimized():
     simulation.initial_year = 2020
     simulation.age_at_death = 70 # Smoker?
     simulation.savings_at_death = 44000 # Reverse-engineered from previous test
-    simulation._initial_savings_rrsp = 4000
+    simulation.initial_savings_rrsp = 4000
     simulation.initial_savings_tfsa = 0
     simulation.initial_salary = 53000
 
@@ -136,7 +136,7 @@ def test_simulation_optimizing_solver():
     simulation.initial_year = 2020
     simulation.age_at_death = 70 # Smoker?
     simulation.savings_at_death = 44000 # Reverse-engineered from previous test
-    simulation._initial_savings_rrsp = 4000
+    simulation.initial_savings_rrsp = 4000
     simulation.initial_savings_tfsa = 0
     simulation.initial_salary = 53000
 

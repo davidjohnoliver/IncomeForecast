@@ -14,7 +14,7 @@ def test_ampere_runs():
     simulation.age_at_death = 80
     simulation.savings_at_death = 10000
     simulation.initial_salary = 40000
-    simulation._initial_savings_rrsp = 5000
+    simulation.initial_savings_rrsp = 5000
     simulation.initial_savings_tfsa = 600
 
     simulation.set_solver(solve.binary_solver)
@@ -54,7 +54,7 @@ def test_bose_runs():
     simulation.age_at_death = 80
     simulation.savings_at_death = 10000
     simulation.initial_salary = 40000
-    simulation._initial_savings_rrsp = 5000
+    simulation.initial_savings_rrsp = 5000
     simulation.initial_savings_tfsa = 600
 
     simulation.set_solver(solve.binary_solver)
@@ -95,7 +95,7 @@ def test_curie_runs():
     simulation.age_at_death = 80
     simulation.savings_at_death = 10000
     simulation.initial_salary = 40000
-    simulation._initial_savings_rrsp = 5000
+    simulation.initial_savings_rrsp = 5000
     simulation.initial_savings_tfsa = 600
 
     optimize = solve.Optimizing_Solver(solve.binary_solver, should_invert=True)
@@ -137,7 +137,7 @@ def test_dirac_runs():
     simulation.age_at_death = 80
     simulation.savings_at_death = 10000
     simulation.initial_salary = 40000
-    simulation._initial_savings_rrsp = 5000
+    simulation.initial_savings_rrsp = 5000
     simulation.initial_savings_tfsa = 600
 
     optimize = solve.Optimizing_Solver(solve.binary_solver, should_invert=True)
@@ -179,7 +179,7 @@ def test_einstein_runs():
     simulation.age_at_death = 80
     simulation.savings_at_death = 10000
     simulation.initial_salary = 40000
-    simulation._initial_savings_rrsp = 5000
+    simulation.initial_savings_rrsp = 5000
     simulation.initial_savings_tfsa = 600
 
     simulation.set_solver(solve.binary_solver)
@@ -219,7 +219,7 @@ def test_franklin_runs():
     simulation.age_at_death = 80
     simulation.savings_at_death = 10000
     simulation.initial_salary = 40000
-    simulation._initial_savings_rrsp = 5000
+    simulation.initial_savings_rrsp = 5000
     simulation.initial_savings_tfsa = 600
 
     optimize = solve.Optimizing_Solver(solve.binary_solver, should_invert=True)

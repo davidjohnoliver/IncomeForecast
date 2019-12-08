@@ -56,12 +56,12 @@ class Simulation:
         self._initial_salary = value
 
     @property
-    def _initial_savings_rrsp(self):
+    def initial_savings_rrsp(self):
         """The amount you already have saved in a RRSP account (or accounts) at the beginning of the simulation."""
-        return self.__initial_savings_rrsp
-    @_initial_savings_rrsp.setter
-    def _initial_savings_rrsp(self, value):
-        self.__initial_savings_rrsp = value
+        return self._initial_savings_rrsp
+    @initial_savings_rrsp.setter
+    def initial_savings_rrsp(self, value):
+        self._initial_savings_rrsp = value
 
     @property
     def initial_savings_tfsa(self):
@@ -193,7 +193,7 @@ class Simulation_Run:
         year_of_retirement = self._parent.year_of_retirement
         year_of_death = self._parent.year_of_death
 
-        initial_funds_state = model.funds_state(self._parent._initial_savings_rrsp, self._parent._initial_savings_tfsa, initial_year)
+        initial_funds_state = model.funds_state(self._parent.initial_savings_rrsp, self._parent._initial_savings_tfsa, initial_year)
         initial_deltas_state = model.deltas_state(
             year=initial_year, 
             gross_salary=self._parent.initial_salary, 
