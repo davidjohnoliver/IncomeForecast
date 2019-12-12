@@ -105,10 +105,16 @@ class Simulation:
     def was_solution_found(self):
         """True if running the simulation found a solution for given inputs, false if no valid solution was found, None if simulation was not run yet."""
         return self._was_solution_found
+
+    @property
+    def run_message(self):
+        """Message corresponding to the outcome of the run."""
+        return self._run_message
     
     def __init__(self):
         self._solution_run = None
         self._was_solution_found = None
+        self._run_message = "Not run"
 
     def set_rules(self, rules):
         """
@@ -145,8 +151,9 @@ class Simulation:
             return simulation_run.final_funds.total_savings
         
         tolerance = 0.001
-        _, solution_run, was_solution_found, _ = self._solver(create_run, run_model, self.savings_at_death, 0, self.initial_salary, tolerance)
+        _, solution_run, was_solution_found, msg = self._solver(create_run, run_model, self.savings_at_death, 0, self.initial_salary, tolerance)
         self._set_solution_run(solution_run, was_solution_found)
+        self._run_message = msg
     
     def _set_solution_run(self, solution_run : 'Simulation_Run', was_solution_found : bool):
         self._solution_run = solution_run

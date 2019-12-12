@@ -25,13 +25,13 @@ def get_simple_linear_func(initial_rrsp_func: Callable[[], float], final_rrsp_fu
 
         if not (0 <= initial_rrsp <= 1):
             if fail_func != None:
-                fail_func()
+                fail_func("savings_rules.simple_linear: initial_rrsp must be between 0 and 1")
             else:
                 raise ValueError("initial_rrsp must be between 0 and 1")
 
         if not (0 <= final_rrsp <= 1):
             if fail_func != None:
-                fail_func()
+                fail_func("savings_rules.simple_linear: final_rrsp must be between 0 and 1")
             else:
                 raise ValueError("final_rrsp must be between 0 and 1")
 
@@ -45,7 +45,7 @@ def get_simple_linear_func(initial_rrsp_func: Callable[[], float], final_rrsp_fu
         rrsp_norm = initial_rrsp + slope * years_elapsed        
         is_in_bounds = 0 <= rrsp_norm <= 1
         if fail_func != None and not is_in_bounds:
-            fail_func()
+            fail_func("savings_rules.simple_linear: interpolated RRSP must be between 0 and 1")
         else:
             assert is_in_bounds
         tfsa_norm = 1 - rrsp_norm
@@ -97,7 +97,7 @@ def get__linear_retirement_deduction_func(initial_rrsp_func: Callable[[], float]
         output = inner_rule(deltas, previous_funds, previous_deltas)
         if (previous_funds.rrsp_savings + deltas.rrsp < 0):
             # 
-            fail_func()
+            fail_func("savings_rules.linear_retirement_deduction: RRSP must not go below 0")
         return output
     
     return checked_rule

@@ -123,11 +123,13 @@ class Optimizing_Solver:
 
         return ((self._variable_names[i], self._x_sol[i]) for i in range(0, self._optimize_values))
     
-    def set_failed(self):
+    def set_failed(self, msg : str):
         """
         When called by an optimizable routine, indicates that the routine has reached an invalid state that shouldn't be counted as a solution.
         """
         self._did_fail = True
+        if self._fail_message == "":
+            self._fail_message = msg
 
     @property
     def initial_output(self):
@@ -152,6 +154,7 @@ class Optimizing_Solver:
         def minimize_func(x):
             self._x = x
             self._did_fail = False
+            self._fail_message = ""
             self._output = self._inner_solver(intermediate_fn, model_fn, target_output, initial_lower_bound, initial_upper_bound, tolerance)
             f = self._output[0]
             f = self._apply_soft_bounds(f, x)
@@ -175,7 +178,16 @@ class Optimizing_Solver:
         self._x_sol = opt_result.x
 
         output = self._output
-        return (output[0], output[1], output[2] and opt_result.success, output[3])
+        msg = ""
+        if not output[2]:
+            msg = output[3] # Use inner solver's failure message
+        elif self._did_fail:
+            msg = self._fail_message # Use failure message from set_fail() call
+        elif not opt_result.success:
+            msg = opt_result.message # Use failure message from minimizer
+        else:
+            msg = output[3] # Use inner solver's success message
+        return (output[0], output[1], output[2] and opt_result.success and not self._did_fail, msg)
     
     def _apply_soft_bounds(self, f : float, x):
         """
