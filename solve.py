@@ -160,7 +160,8 @@ class Optimizing_Solver:
             f = self._apply_soft_bounds(f, x)
             if (not self._output[2] or self._did_fail):
                 # Penalize invalid solution, so that optimizer doesn't try to use it
-                f += self.PENALTY_BASE
+                penalty = -self.PENALTY_BASE if self._should_invert else self.PENALTY_BASE
+                f += penalty
             elif not self._has_initial_solution:
                 #
                 self._has_initial_solution = True
@@ -200,11 +201,15 @@ class Optimizing_Solver:
             lower_bound = bnds[0]
             if (lower_bound is not None and v < lower_bound):
                 diff = lower_bound - v
-                f += self.PENALTY_BASE + 100 * diff
+                abs_penalty = self.PENALTY_BASE + 100 * diff
+                penalty = -abs_penalty if self._should_invert else abs_penalty
+                f += penalty
         
             upper_bound = bnds[1]
             if (upper_bound is not None and v > upper_bound):
                 diff = v - upper_bound
-                f += self.PENALTY_BASE + 100 * diff
+                abs_penalty = self.PENALTY_BASE + 100 * diff
+                penalty = -abs_penalty if self._should_invert else abs_penalty
+                f += penalty
 
         return f
