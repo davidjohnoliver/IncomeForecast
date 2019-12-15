@@ -56,13 +56,23 @@ class Simulation_Presenter:
     
     @property
     def career_rrsp_contribution_series(self):
-        """p"""
+        """RRSP contributions pre-retirement"""
         return [d.rrsp for d in self._simulation.all_deltas if d.year <= self._simulation.year_of_retirement]
     
     @property
     def career_tfsa_contribution_series(self):
-        """p"""
+        """RRSP contributions pre-retirement"""
         return [d.tfsa for d in self._simulation.all_deltas if d.year <= self._simulation.year_of_retirement]
+    
+    @property
+    def career_total_savings_series(self):
+        """Total savings, yearly, pre-retirement"""
+        return [d.rrsp + d.tfsa for d in self._simulation.all_deltas if d.year < self._simulation.year_of_retirement]
+        
+    @property
+    def career_total_savings_monthly_series(self):
+        """Total savings, monthly, pre-retirement"""
+        return [(d.rrsp + d.tfsa)/12.0 for d in self._simulation.all_deltas if d.year < self._simulation.year_of_retirement]
     
     # Retirement
     @property
