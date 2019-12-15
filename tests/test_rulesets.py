@@ -313,7 +313,6 @@ def test_hawking_runs():
     career_rules, retirement_rules = rulesets.hawking(
         salary_compound_rate=0.05,
         salary_plateau=70000,
-        base_spending=30000,
         increase_savings_weight=0.5,
         initial_rrsp_allotment_guess=0.5,
         final_rrsp_allotment_guess=0.5,

@@ -294,7 +294,6 @@ def galileo(
 def hawking(
     salary_compound_rate : float, 
     salary_plateau : float, 
-    base_spending : float, 
     increase_savings_weight : float,
     initial_rrsp_allotment_guess : float, 
     final_rrsp_allotment_guess : float, 
