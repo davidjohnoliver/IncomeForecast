@@ -39,3 +39,19 @@ class Markdown_Table:
         Completes the table and returns a displayable Markdown object
         """
         return IPython.display.Markdown(self._str)
+
+class classproperty(object): # https://stackoverflow.com/questions/5189699/how-to-make-a-class-property
+    def __init__(self, f):
+        self.f = f
+    def __get__(self, obj, owner):
+        return self.f(owner)
+
+class _this(object):
+    @classproperty
+    def value(self):
+        raise ValueError("A required simulation parameter wasn't set.")
+
+class set(object):
+    @classproperty
+    def this(self):
+        return _this()
