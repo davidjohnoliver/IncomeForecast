@@ -79,6 +79,7 @@ class Optimizing_Solver:
         self._x = []
         self._x_sol = []
         self._optimize_values = 0
+        self._is_optimization_disabled = False
         self._output = ()
 
     def subscribe_optimized_scalar(self, variable_name : str, lower_bound : float = None, upper_bound : float = None, initial_guess : float = None) -> Callable[[], float]:
@@ -142,11 +143,24 @@ class Optimizing_Solver:
         """
 
         return ((self._variable_names[i], self._x_initial[i]) for i in range(0, self._optimize_values))
+    
+    @property
+    def is_optimization_disabled(self):
+        """If this is true, the optimizer won't optimize but will only call the inner solver once with initial guesses."""
+        return self._is_optimization_disabled
+    @is_optimization_disabled.setter
+    def is_optimization_disabled(self, value):
+        self._is_optimization_disabled = value
 
     
     def solve(self, intermediate_fn, model_fn, target_output : float, initial_lower_bound : float, initial_upper_bound : float, tolerance : float):
         if (self._optimize_values == 0):
             # In the trivial case that no optimized values have been requested, just return the result of the inner solver
+            return self._inner_solver(intermediate_fn, model_fn, target_output, initial_lower_bound, initial_upper_bound, tolerance)
+
+        if self.is_optimization_disabled:
+            # Use initial guesses and return without optimizing
+            self._x = self._x0 
             return self._inner_solver(intermediate_fn, model_fn, target_output, initial_lower_bound, initial_upper_bound, tolerance)
 
         self._has_initial_solution = False
