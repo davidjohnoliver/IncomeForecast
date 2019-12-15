@@ -78,3 +78,41 @@ def test_linear_retirement_deduction_func():
 
     assert -10400 == deltas_2023.rrsp # -40k * (0.2 + 1*0.6/10)
     assert -29600 == deltas_2023.tfsa
+
+def test_adjusted_heuristic_retirement_deduction_excess_tfsa():
+    rule = savings_rules.get_adjusted_heuristic_retirement_deduction(retirement_year=2040, year_of_death=2060, rrsp_adjustment_func=lambda: 0)
+    deltas_2041 = model.deltas_state.from_year(2041)
+    funds_2040 = model.funds_state(320000, 550000, 2040)
+
+    deltas_2041 = deltas_2041.update_spending(40000)
+
+    deltas = deltas_2041
+    previous_funds = funds_2040
+    previous_deltas = None
+    deltas = rule(deltas, previous_funds, previous_deltas)
+    assert -16000 == deltas.rrsp
+    assert -24000 == deltas.tfsa
+
+def test_adjusted_heuristic_retirement_deduction_exact_savings():
+    retirement_year = 2040
+    year_of_death = 2060
+    rule = savings_rules.get_adjusted_heuristic_retirement_deduction(retirement_year, year_of_death, rrsp_adjustment_func=lambda: 0)
+    funds_2040 = model.funds_state(320000, 480000, 2040)
+
+    spending = 40000
+
+    previous_funds = funds_2040
+    previous_deltas = None
+    
+    for y in range(retirement_year, year_of_death):
+        year = y + 1
+        deltas = model.deltas_state.from_year(year) \
+            .update_spending(spending)
+        deltas = rule(deltas, previous_funds, previous_deltas)
+        funds = model.get_updated_funds_from_deltas(previous_funds, deltas)
+        previous_deltas = deltas
+        previous_funds = funds
+    
+    assert year_of_death == funds.year
+    assert 0 == funds.rrsp_savings
+    assert 0 == funds.tfsa_savings
