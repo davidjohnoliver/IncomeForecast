@@ -46,7 +46,7 @@ def get_luxury_over_basic_capped(base_spending: float, luxury_compound_rate: flo
 
     return luxury_over_basic_capped
 
-def get_increasing_savings_increasing_spending(initial_year : float, increase_savings_weight : float):
+def get_increasing_savings_increasing_spending(initial_year : float, increase_savings_weight : float, should_clamp_absolute_spending : bool):
     """
     A somewhat complex spending rule which tries to enforce the following intuitively desirable traits:
         - savings, as a fraction of after-tax income, should only ever increase
@@ -63,7 +63,9 @@ def get_increasing_savings_increasing_spending(initial_year : float, increase_sa
         3. Actual spending is sp = sp_ceil*(1 - increase_savings_weight) + sp_floor*increase_savings_weight.
             Hence if increase_savings_weight = 0.5, the average will be taken. If increase_savings_weight = 1, any increase in salary will be
             entirely put into savings. If increase_savings_weight = 0, any increase in salary will be entirely spent. 
-        4. Spending will be clamped to be no greater than after-tax income.
+        4. If should_clamp_absolute_spending is true, spending will be clamped to be no less than the previous year's absolute spending. (This
+            matters when net income goes down. The rationale here is that reducing absolute spending is something most people would prefer to avoid.)
+        5. Spending will be clamped to be no greater than after-tax income.
 
         0. Actually, in order to have the aforementioned mathematically-useful character of 'maxing out' or 'zeroing out' total career spending,
             the requested increase_savings_weight will actually be tweaked if the initial spending is at 95% or 5% of initial after-tax income,
@@ -94,7 +96,12 @@ def get_increasing_savings_increasing_spending(initial_year : float, increase_sa
 
         sp = sp_ceiling * (1 - actual_increase_savings_weight) + sp_floor * actual_increase_savings_weight
 
-        sp_clamped = min(sp, deltas.total_net_income)
+        sp_clamped = sp
+
+        if should_clamp_absolute_spending:
+            sp_clamped = max(sp, previous_deltas.spending)
+
+        sp_clamped = min(sp_clamped, deltas.total_net_income)
 
         return deltas.update_spending(sp_clamped)
 

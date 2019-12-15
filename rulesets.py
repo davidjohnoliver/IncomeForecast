@@ -193,7 +193,7 @@ def einstein(
     return (
         ruleset.get_career_rules(
             salary_rules.get_compound_plateau(salary_compound_rate, salary_plateau),
-            spending_rules.get_increasing_savings_increasing_spending(initial_year, increase_savings_weight),
+            spending_rules.get_increasing_savings_increasing_spending(initial_year, increase_savings_weight, False),
             savings_rules.get_simple_linear(initial_rrsp_allotment, final_rrsp_allotment, initial_year, career_length_yrs),
             rrsp_interest_rate,
             tfsa_interest_rate
@@ -232,7 +232,7 @@ def franklin(
     return (
         ruleset.get_career_rules(
             salary_rules.get_compound_plateau(salary_compound_rate, salary_plateau),
-            spending_rules.get_increasing_savings_increasing_spending(initial_year, increase_savings_weight),
+            spending_rules.get_increasing_savings_increasing_spending(initial_year, increase_savings_weight, False),
             savings_rules.get_simple_linear_func(initial_rrsp_func, final_rrsp_func, initial_year, career_length_yrs, optimize.set_failed),
             rrsp_interest_rate,
             tfsa_interest_rate
