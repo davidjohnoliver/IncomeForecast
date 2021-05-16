@@ -1,8 +1,6 @@
 """
 Base state classes and update logic. 
 """
-import utils
-
 
 class funds_state:
     """Stores total RRSP savings and total TFSA savings for a given year."""
