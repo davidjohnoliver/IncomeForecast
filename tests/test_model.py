@@ -38,3 +38,29 @@ def test_get_updated_deltas_from_rules():
     assert new_deltas.year == 2000
     assert new_deltas.gross_salary == 109
     assert new_deltas.rrsp == 640
+
+def test_couple_rule_from_single_rule():
+    def set_gross_salary_rule_partner_1(deltas: model.deltas_state, previous_funds: model.funds_state, previous_deltas: model.deltas_state):
+        return deltas.update_gross_salary(previous_deltas.gross_salary + 20)
+        
+    def set_gross_salary_rule_partner_2(deltas: model.deltas_state, previous_funds: model.funds_state, previous_deltas: model.deltas_state):
+        return deltas.update_gross_salary(previous_deltas.gross_salary + 18)
+
+    previous_deltas = model.couple_deltas_state.from_year(1980)
+    previous_deltas = previous_deltas.update_partner1_deltas(previous_deltas.partner1_deltas.update_gross_salary(14))
+    previous_deltas = previous_deltas.update_partner2_deltas(previous_deltas.partner2_deltas.update_gross_salary(7))
+
+    assert previous_deltas.partner1_deltas.gross_salary == 14
+    assert previous_deltas.partner2_deltas.gross_salary == 7
+
+    rules = [
+        model.get_couple_rule_from_single_rule(set_gross_salary_rule_partner_1, 1),
+        model.get_couple_rule_from_single_rule(set_gross_salary_rule_partner_2, 2),
+    ]
+
+    deltas = model.get_updated_couple_deltas_from_rules(model.couple_funds_state.from_savings(0,0,0,1980), previous_deltas, rules)
+
+    assert deltas.year == 1981
+
+    assert deltas.partner1_deltas.gross_salary == 34
+    assert deltas.partner2_deltas.gross_salary == 25
