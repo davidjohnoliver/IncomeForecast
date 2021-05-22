@@ -314,7 +314,6 @@ def hawking(
 
     initial_rrsp_func = optimize.subscribe_optimized_scalar("initial_rrsp", lower_bound=0, upper_bound=1, initial_guess=initial_rrsp_allotment_guess)
     final_rrsp_func = optimize.subscribe_optimized_scalar("final_rrsp", lower_bound=0, upper_bound=1, initial_guess=final_rrsp_allotment_guess)
-    # rrsp_retirement_func = optimize.subscribe_optimized_scalar("rrsp_retirement_adjustment", lower_bound=-1, upper_bound=1, initial_guess=0)
     rrsp_retirement_func = optimize.subscribe_optimized_scalar("rrsp_retirement_adjustment", lower_bound=-1, upper_bound=1, initial_guess=rrsp_retirement_adjustment_guess)
 
     return (

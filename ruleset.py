@@ -60,5 +60,3 @@ def get_retirement_rules(retirement_income: float, savings_rule, rrsp_interest_r
         savings_rule, # Deduct spending from RRSP/TFSA according to rule
         natural_rules.get_calculate_investment_interest(rrsp_interest_rate, tfsa_interest_rate) # Earn interest on remaining savings
     ]
-    
-#def get_retirement_rules_simple_linear_savings(retirement_income, )
