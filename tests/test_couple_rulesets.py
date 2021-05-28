@@ -2,6 +2,7 @@ import sim
 import couple_rulesets
 import solve
 
+
 def test_alice_runs():
 
     simulation = sim.Dual_Income_Simulation()
@@ -25,16 +26,9 @@ def test_alice_runs():
 
     simulation.set_solver(solve.binary_solver)
 
-    simulation.set_ruleset(couple_rulesets.alice(
-        0.06,
-        80000,
-        0.04,
-        75000,
-        60000,
-        0.05,
-        0.1,
-        0.1
-    ))
+    simulation.set_ruleset(
+        couple_rulesets.alice(0.06, 80000, 0.04, 75000, 60000, 0.05, 0.1, 0.1)
+    )
 
     simulation.run()
 
