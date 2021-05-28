@@ -35,11 +35,15 @@ class couple_funds_state:
         assert(self.partner1_funds.year == self.partner2_funds.year)
         return self.partner1_funds.year
 
+    @property
+    def total_savings(self):
+        return self.partner1_funds.total_savings + self.partner2_funds.total_savings
+
 class deltas_state:
     """Records deltas for a given year, including pre-tax salary, income tax, RRSP contribution, TFSA contribution, and spending. Immutable, 
     call update_x() to create a mutated value with modified x."""
 
-    def __init__(self, year: int, gross_salary, tax, rrsp, tfsa, spending, rrsp_interest, tfsa_interest, tax_refund):
+    def __init__(self, year: int, gross_salary: float, tax: float, rrsp: float, tfsa: float, spending: float, rrsp_interest: float, tfsa_interest: float, tax_refund: float):
         self._year = year
         self._gross_salary = gross_salary
         self._tax = tax
@@ -75,7 +79,7 @@ class deltas_state:
         """Pre-tax salary."""
         return self._gross_salary
 
-    def update_gross_salary(self, new_value):
+    def update_gross_salary(self, new_value: float):
         output = self._copy()
         output._gross_salary = new_value
         return output
@@ -85,7 +89,7 @@ class deltas_state:
         """Income tax."""
         return self._tax
 
-    def update_tax(self, new_value):
+    def update_tax(self, new_value: float):
         output = self._copy()
         output._tax = new_value
         return output
@@ -170,16 +174,17 @@ class deltas_state:
 class couple_deltas_state:
     """Records deltas for a given year for two income-earners in a couple."""
 
-    def __init__(self, partner1_deltas : deltas_state, partner2_deltas : deltas_state) -> None:
+    def __init__(self, partner1_deltas : deltas_state, partner2_deltas : deltas_state, household_spending : float) -> None:
         assert(partner1_deltas.year == partner2_deltas.year)
         self._partner1_deltas = partner1_deltas
         self._partner2_deltas = partner2_deltas
+        self._household_spending = household_spending
 
     def from_year(year: int):
-        return couple_deltas_state(deltas_state.from_year(year), deltas_state.from_year(year))
+        return couple_deltas_state(deltas_state.from_year(year), deltas_state.from_year(year), 0)
 
     def copy(self):
-        output = couple_deltas_state(self._partner1_deltas, self._partner2_deltas)
+        output = couple_deltas_state(self._partner1_deltas, self._partner2_deltas, self._household_spending)
         return output
 
     @property
@@ -205,6 +210,24 @@ class couple_deltas_state:
         assert(self.partner1_deltas.year == self.partner2_deltas.year)
         return self.partner1_deltas.year
 
+    @property
+    def household_spending(self):
+        """Total spending."""
+        return self._household_spending
+    
+    def update_household_spending(self, new_value : float):
+        output = self.copy()
+        output._household_spending = new_value
+        return output
+
+    @property
+    def household_total_net_income(self):
+        return self.partner1_deltas.total_net_income + self.partner2_deltas.total_net_income
+
+    @property
+    def household_undifferentiated_savings(self):
+        """Total savings available to be split between RRSPs and TFSAs. """
+        return self.household_total_net_income - self.household_spending
 
 
 def get_updated_funds_from_deltas(previous_funds: funds_state, deltas: deltas_state):
