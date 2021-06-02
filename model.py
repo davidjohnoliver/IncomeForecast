@@ -1,5 +1,5 @@
 """
-Base state classes and update logic. 
+Base state classes and update logic.
 """
 
 class funds_state:
@@ -40,7 +40,7 @@ class couple_funds_state:
         return self.partner1_funds.total_savings + self.partner2_funds.total_savings
 
 class deltas_state:
-    """Records deltas for a given year, including pre-tax salary, income tax, RRSP contribution, TFSA contribution, and spending. Immutable, 
+    """Records deltas for a given year, including pre-tax salary, income tax, RRSP contribution, TFSA contribution, and spending. Immutable,
     call update_x() to create a mutated value with modified x."""
 
     def __init__(self, year: int, gross_salary: float, tax: float, rrsp: float, tfsa: float, spending: float, rrsp_interest: float, tfsa_interest: float, tax_refund: float):
@@ -214,7 +214,7 @@ class couple_deltas_state:
     def household_spending(self):
         """Total spending."""
         return self._household_spending
-    
+
     def update_household_spending(self, new_value : float):
         output = self.copy()
         output._household_spending = new_value
@@ -242,9 +242,9 @@ def get_updated_deltas_from_rules(previous_funds: funds_state, previous_deltas: 
     """Applies the provided list of rules in sequence to produce a set of deltas. The signature for a rule is:
      def rule(deltas: model.deltas_state, previous_funds: model.funds_state, previous_deltas: model.deltas_state)
     Each rule operates on the output of the previous rule.
-    
+
     The output deltas are for the year subsequent to that of previous_funds and previous_deltas."""
-    
+
     assert previous_funds.year == previous_deltas.year
     deltas = deltas_state.from_year(previous_funds.year + 1)
     for rule in rules:
@@ -272,25 +272,25 @@ def get_updated_couple_deltas_from_rules(previous_funds: couple_funds_state, pre
     deltas = couple_deltas_state.from_year(previous_funds.year + 1)
     for rule in rules:
         deltas = rule(deltas, previous_funds, previous_deltas)
-    
+
     return deltas
 
 def get_couple_rule_from_single_rule(single_rule, partner: int):
     """Wraps a rule for an individual income-earner as a rule for a dual-income couple, applied to one person in the couple."""
     if (partner < 1 or partner > 2):
         raise ValueError
-    
+
     def apply_partner1(deltas: couple_deltas_state, previous_funds: couple_funds_state, previous_deltas: couple_deltas_state):
         new_partner1_deltas = single_rule(deltas.partner1_deltas, previous_funds.partner1_funds, previous_deltas.partner1_deltas)
         new_deltas = deltas.update_partner1_deltas(new_partner1_deltas)
         return new_deltas
-    
+
     def apply_partner2(deltas: couple_deltas_state, previous_funds: couple_funds_state, previous_deltas: couple_deltas_state):
         new_partner2_deltas = single_rule(deltas.partner2_deltas, previous_funds.partner2_funds, previous_deltas.partner2_deltas)
         new_deltas = deltas.update_partner2_deltas(new_partner2_deltas)
         return new_deltas
 
     return apply_partner1 if partner == 1 else apply_partner2
-        
-    
+
+
 
