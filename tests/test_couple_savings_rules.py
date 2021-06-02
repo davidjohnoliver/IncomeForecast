@@ -74,3 +74,21 @@ def _get_updated_deltas_equalizing_rrsp_only_split(
     updated_deltas = rule(deltas, previous_funds, previous_deltas)
 
     return updated_deltas
+
+
+def test_adjust_values_to_produce_sum():
+    values_and_limits = [(5, 12), (2, 4), (0, 3), (0, 0)]
+    target_sum = 10
+    values_and_limits = couple_savings_rules._adjust_values_to_produce_sum(
+        values_and_limits, target_sum
+    )
+    assert values_and_limits == [(6, 12), (3, 4), (1, 3), (0, 0)]
+
+
+def test_adjust_values_to_produce_sum_no_valid_solution():
+    values_and_limits = [(5, 12), (2, 4), (0, 3), (0, 0)]
+    target_sum = 50
+    values_and_limits = couple_savings_rules._adjust_values_to_produce_sum(
+        values_and_limits, target_sum
+    )
+    assert values_and_limits == [(12, 12), (4, 4), (3, 3), (31, 0)]
