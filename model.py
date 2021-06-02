@@ -157,13 +157,13 @@ class deltas_state:
 
     @property
     def total_net_income(self):
-        """Salary plus tax refund (from last year) minus tax owed."""
+        """Salary plus tax refund (from last year) minus tax owed. Note that tax refund may be negative (if tax was paid on RRSP withdrawal)"""
         return self.gross_salary + self.tax_refund - self.tax
 
     @property
     def taxable_income(self):
-        """Taxable portion of salary, ie less the RRSP contribution (or mas the withdrawal), plus any interest earned on RRSP savings (TFSA interest isn't taxed)."""
-        return self.gross_salary - self.rrsp + self.rrsp_interest
+        """Taxable portion of salary, ie less the RRSP contribution (or mas the withdrawal)."""
+        return self.gross_salary - self.rrsp
 
     @property
     def undifferentiated_savings(self):

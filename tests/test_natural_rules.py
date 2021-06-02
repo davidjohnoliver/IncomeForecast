@@ -33,12 +33,12 @@ def test_apply_tax(gross_salary, rrsp):
     assert expected_income_tax == delta.tax
 
 def test_apply_tax_refund(gross_salary, rrsp, rrsp_interest):
-    previous_actual_taxable_income = gross_salary - rrsp + rrsp_interest
+    previous_actual_taxable_income = gross_salary - rrsp
 
     paid_tax = tax.get_income_tax(gross_salary)
     correct_tax = tax.get_income_tax(previous_actual_taxable_income)
     expected_refund = paid_tax - correct_tax
-    
+
     previous_delta = model.deltas_state.from_year(1999)
     previous_delta = previous_delta.update_gross_salary(gross_salary)
     previous_delta = previous_delta.update_rrsp(rrsp)
