@@ -81,6 +81,10 @@ def get_increasing_savings_increasing_spending(
         previous_funds: model.couple_funds_state,
         previous_deltas: model.couple_deltas_state,
     ):
+        if previous_deltas.household_total_net_income <= 0:
+            # If there was no (or negative) net income, just maintain previous spending.
+            return deltas.update_household_spending(previous_deltas.household_spending)
+
         nonlocal actual_increase_savings_weight
         if previous_deltas.year == initial_year:
             # This is the first year, adjust increase_savings_weight if need be. If spending is in the upper edge region, savings weight
