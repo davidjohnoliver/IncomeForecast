@@ -10,7 +10,7 @@ class funds_state:
         """Total savings across all classes."""
         return self.rrsp_savings + self.tfsa_savings
 
-    def __init__(self, rrsp_savings, tfsa_savings, year):
+    def __init__(self, rrsp_savings: float, tfsa_savings: float, year: int):
         self.rrsp_savings = rrsp_savings
         self.tfsa_savings = tfsa_savings
         self.year = year
