@@ -1,16 +1,26 @@
 import IPython.display
 
-def with_colour(display_string : str, colour_string : str):
-    return IPython.display.HTML(f'<text style="color: {colour_string}">{display_string}</text>')
+
+def with_colour(display_string: str, colour_string: str):
+    return IPython.display.HTML(
+        f'<text style="color: {colour_string}">{display_string}</text>'
+    )
+
 
 def table(*headers):
     """
     Initializes a Markdown table. Takes the headers of the table as input
-    
+
     :return: a table builder
     :rtype: Markdown_Table
     """
     return Markdown_Table(*headers)
+
+
+def br():
+    """Returns a line break."""
+    return with_colour(f"<br>", "gray")
+
 
 class Markdown_Table:
     def __init__(self, *headers):
@@ -40,16 +50,22 @@ class Markdown_Table:
         """
         return IPython.display.Markdown(self._str)
 
-class classproperty(object): # https://stackoverflow.com/questions/5189699/how-to-make-a-class-property
+
+class classproperty(
+    object
+):  # https://stackoverflow.com/questions/5189699/how-to-make-a-class-property
     def __init__(self, f):
         self.f = f
+
     def __get__(self, obj, owner):
         return self.f(owner)
+
 
 class _this(object):
     @classproperty
     def value(self):
         raise ValueError("A required simulation parameter wasn't set.")
+
 
 class set(object):
     @classproperty
