@@ -27,23 +27,40 @@ class Markdown_Table:
         self._separator = " | "
         self._str = self._separator.join(headers)
         self._columns = len(headers)
-        dividers = ["---" for h in headers]
-        self.append_row(*dividers)
-    
+        self._are_dividers_applied = False
+
+    def set_alignments(self, *alignments):
+        """
+        p
+        """
+        if self._are_dividers_applied:
+            raise RuntimeError("Alignments have already been applied.")
+        self._append_row(*alignments)
+        self._are_dividers_applied = True
+
     def append_row(self, *row_entries):
         """
-        Appends a row of entries to the current table. The number of entries must match the number of columns (defined by the number of 
+        Appends a row of entries to the current table. The number of entries must match the number of columns (defined by the number of
         headers initially provided.)
         :return: The table builder, for fluent chaining
         """
-        if (self._columns != len(row_entries)):
-            raise ValueError(f"Table has {self._columns} columns but only {len(row_entries)} entries were provided")
+        if not self._are_dividers_applied:
+            dividers = ["---" for _ in range(0, self._columns)]
+            self.set_alignments(*dividers)
+
+        return self._append_row(*row_entries)
+
+    def _append_row(self, *row_entries):
+        if self._columns != len(row_entries):
+            raise ValueError(
+                f"Table has {self._columns} columns but only {len(row_entries)} entries were provided"
+            )
 
         self._str = self._str + "\n"
-        self._str = self._str + self._separator.join(row_entries)
+        self._str = self._str + self._separator.join([str(e) for e in row_entries])
 
-        return self #Permit fluent chaining
-    
+        return self  # Permit fluent chaining
+
     def close(self):
         """
         Completes the table and returns a displayable Markdown object
