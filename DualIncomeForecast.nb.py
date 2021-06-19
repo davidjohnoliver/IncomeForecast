@@ -1,6 +1,8 @@
 # %%
 
 ## Imports
+import math
+from IPython.core.display import display
 import sim
 import solve
 import couple_rulesets
@@ -9,6 +11,8 @@ import matplotlib.pyplot as plt
 import plot_utils
 import display_utils
 from display_utils import set
+from display_utils import with_colour
+from display_utils import br
 
 import IPython.display
 
@@ -84,8 +88,8 @@ should_optimize = False
 
 ## Some final parameters to tweak, for the adventurous. If should_optimize = True, the simulation will search for optimum values for these parameters, using the provided values as initial guesses.
 ### The proportion of savings to be put in the TFSA. initial_tfsa is used in the first year, final_tfsa is used in the last year of working before retirement, and intermediate values scale linearly between the two.
-initial_tfsa = 0.99
-final_tfsa = 0.8
+initial_tfsa = 0.5
+final_tfsa = 0.5
 ### The equalize_income_weighting parameter is used to determine how to distribute RRSP contributions between partners with unequal salaries. A high parameter value maximises the contribution of the higher-earning couple, to minimize marginal tax right now; a low parameter value spreads the contribution evenly, to minimize marginal tax later when withdrawing from the RRSP. Again, it scales linearly during the simulation from the initial value in the first year to the final value in the last year.
 initial_equalize_income_weighting = 0.5
 final_equalize_income_weighting = 0.5
@@ -129,11 +133,167 @@ simulation.run()
 ##############################################################################
 
 # Text output
-if (not simulation.was_solution_found):
-    display(display_utils.with_colour("**No solution was found for given inputs! Showing closest outcome.**", "red"))
-    display(display_utils.with_colour(f"Message: {simulation.run_message}", "red"))
+if not simulation.was_solution_found:
+    display(
+        with_colour(
+            "**No solution was found for given inputs! Showing closest outcome.**",
+            "red",
+        )
+    )
+    display(with_colour(f"Message: {simulation.run_message}", "red"))
 else:
-    display(display_utils.with_colour("Solution found.", "green"))
+    display(with_colour("Solution found.", "green"))
+
+display(br())
+
+presenter = present.Dual_Income_Simulation_Presenter(simulation)
+
+
+def dround(raw: float):
+    zeroes = int(math.log10(raw)) - 1
+    zeroes = min(3, zeroes)  # Don't round to more than 1000
+    return f"${int(round(raw, -zeroes)):,.0f}"
+
+
+def perc(raw: float):
+    return f"{raw*100:.1f}%"
+
+
+## Info table
+info_table = display_utils.table("Simulation details", "")
+info_table.set_alignments("--:", ":--")
+info_table.append_row(f"{partner1.name} retires in:", partner1.year_of_retirement)
+info_table.append_row(f"{partner2.name} retires in:", partner2.year_of_retirement)
+info_table.append_row(
+    f"{partner1.name}'s salary:",
+    f"\${partner1.initial_salary:,.0f} to \${partner1.salary_plateau:,.0f}, increasing by {perc(partner1.salary_compound_rate)} each year",
+)
+info_table.append_row(
+    f"{partner2.name}'s salary:",
+    f"\${partner2.initial_salary:,.0f} to \${partner2.salary_plateau:,.0f}, increasing by {perc(partner2.salary_compound_rate)} each year",
+)
+info_table.append_row("Interest rate:", perc(interest_rate))
+info_table.append_row("Increase savings weight", increase_savings_weight)
+display(info_table.close())
+
+display(br())
+
+## Summary text
+display(
+    with_colour(
+        f"{partner1.name} worked until {partner1.year_of_retirement}. {partner2.name} worked until {partner2.year_of_retirement}. In the first year ({presenter.years_series[1]}) they spent {dround(presenter.first_year_spending)}. In retirement they had an income of {dround(presenter.retirement_spending)} a year. Their lifetime average yearly spending was {dround(presenter.average_yearly_spending)} a year.",
+        "black",
+    )
+)
+
+display(br())
+
+
+## Savings table
+savings_table = display_utils.table(
+    "Year",
+    f"{partner1.name}'s salary",
+    f"{partner2.name}'s salary",
+    "Monthly spending",
+    "Monthly saving",
+)
+YEARS_TO_SHOW_SAVINGS_FOR = 5
+for i in range(1, YEARS_TO_SHOW_SAVINGS_FOR + 1):
+    savings_table.append_row(
+        f"**{presenter.years_series[i]}**",
+        dround(presenter.partner1.salary_series[i]),
+        dround(presenter.partner2.salary_series[i]),
+        dround(presenter.spending_monthly_series[i]),
+        dround(presenter.combined_savings_monthly_series[i]),
+    )
+display(savings_table.close())
+
+display(br())
+
+## Detailed savings table
+savings_breakdown_table = display_utils.table(
+    "Year",
+    f"{partner1.name} TFSA",
+    f"{partner1.name} RRSP",
+    f"{partner2.name} TFSA",
+    f"{partner2.name} RRSP",
+)
+for i in range(1, YEARS_TO_SHOW_SAVINGS_FOR + 1):
+    savings_breakdown_table.append_row(
+        f"**{presenter.years_series[i]}**",
+        dround(presenter.partner1.tfsa_monthly_series[i]),
+        dround(presenter.partner1.rrsp_monthly_series[i]),
+        dround(presenter.partner2.tfsa_monthly_series[i]),
+        dround(presenter.partner2.rrsp_monthly_series[i]),
+    )
+display(with_colour("Detailed savings breakdown, monthly contributions:", "black"))
+display(savings_breakdown_table.close())
+
+# %%
+# General-interest graphs
+
+base_fig_size = (10, 4)
+
+
+def fig_size(stretch_y: float = 1):
+    return (base_fig_size[0], base_fig_size[1] * stretch_y)
+
+
+fig1, ax1 = plt.subplots(figsize=fig_size())
+
+ax1.plot(
+    presenter.partner1.career_year_series,
+    presenter.partner1.career_salary_series,
+    "-",
+    label=f"{partner1.name}",
+)
+ax1.plot(
+    presenter.partner2.career_year_series,
+    presenter.partner2.career_salary_series,
+    "-",
+    label=f"{partner2.name}",
+)
+ax1.set_title("Salary")
+ax1.legend()
+
+fig2, ax2 = plt.subplots(figsize=fig_size())
+ax2.plot(presenter.years_series, presenter.spending_monthly_series, "-")
+ax2.set_title("Monthly spending")
+
+fig3, ax3 = plt.subplots(figsize=fig_size())
+ax3.plot(presenter.career_years_series, presenter.career_combined_savings_monthly_series)
+ax3.set_title("Monthly total saving")
+
+# fig4, ax4 = plt.subplots(figsize=fig_size())
+# ax4.plot(presenter.partner1.career_year_series,presenter.partner1.career_tfsa_monthly_series, '-', label=f"{partner1.name} TFSA")
+# ax4.plot(presenter.partner1.career_year_series,presenter.partner1.career_rrsp_monthly_series, '-', label=f"{partner1.name} RRSP")
+# ax4.plot(presenter.partner2.career_year_series,presenter.partner2.career_tfsa_monthly_series, '-', label=f"{partner2.name} TFSA")
+# ax4.plot(presenter.partner2.career_year_series,presenter.partner2.career_rrsp_monthly_series, '-', label=f"{partner2.name} RRSP")
+# ax4.set_title("Monthly saving breakdown")
+# ax4.legend()
+
+plt.show()
+
+# %%
+# Re-import modified dependencies
+import importlib
+import present
+import sim
+import couple_rulesets
+import couple_spending_rules
+import couple_savings_rules
+import solve
+import display_utils
+
+importlib.reload(present)
+importlib.reload(sim)
+importlib.reload(couple_rulesets)
+importlib.reload(couple_spending_rules)
+importlib.reload(solve)
+importlib.reload(display_utils)
+importlib.reload(couple_savings_rules)
+
+display("Reimported modules")
 
 # %%
 # %%
