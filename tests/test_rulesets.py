@@ -2,6 +2,7 @@ import rulesets
 import sim
 import solve
 
+
 def test_ampere_runs():
     """
     This is a minimal sanity-test that using the ruleset doesn't throw any errors. It doesn't verify correctness (which isn't really possible for full rulesets).
@@ -16,6 +17,9 @@ def test_ampere_runs():
     simulation.initial_salary = 40000
     simulation.initial_savings_rrsp = 5000
     simulation.initial_savings_tfsa = 600
+    simulation.initial_savings_unregistered = 0
+    simulation.initial_tfsa_limit = 0
+    simulation.initial_rrsp_limit = 0
 
     simulation.set_solver(solve.binary_solver)
 
@@ -31,7 +35,7 @@ def test_ampere_runs():
         year_of_death=simulation.year_of_death,
         retirement_income=50000,
         rrsp_interest_rate=0.05,
-        tfsa_interest_rate=0.05
+        tfsa_interest_rate=0.05,
     )
 
     simulation.set_rules(career_rules)
@@ -41,6 +45,7 @@ def test_ampere_runs():
 
     assert 46 == len(simulation.all_deltas)
     assert 46 == len(simulation.all_funds)
+
 
 def test_bose_runs():
     """
@@ -56,6 +61,9 @@ def test_bose_runs():
     simulation.initial_salary = 40000
     simulation.initial_savings_rrsp = 5000
     simulation.initial_savings_tfsa = 600
+    simulation.initial_savings_unregistered = 0
+    simulation.initial_tfsa_limit = 0
+    simulation.initial_rrsp_limit = 0
 
     simulation.set_solver(solve.binary_solver)
 
@@ -72,7 +80,7 @@ def test_bose_runs():
         year_of_death=simulation.year_of_death,
         retirement_income=50000,
         rrsp_interest_rate=0.05,
-        tfsa_interest_rate=0.05
+        tfsa_interest_rate=0.05,
     )
 
     simulation.set_rules(career_rules)
@@ -82,6 +90,7 @@ def test_bose_runs():
 
     assert 46 == len(simulation.all_deltas)
     assert 46 == len(simulation.all_funds)
+
 
 def test_curie_runs():
     """
@@ -97,6 +106,9 @@ def test_curie_runs():
     simulation.initial_salary = 40000
     simulation.initial_savings_rrsp = 5000
     simulation.initial_savings_tfsa = 600
+    simulation.initial_savings_unregistered = 0
+    simulation.initial_tfsa_limit = 0
+    simulation.initial_rrsp_limit = 0
 
     optimize = solve.Optimizing_Solver(solve.binary_solver, should_invert=True)
 
@@ -114,7 +126,7 @@ def test_curie_runs():
         retirement_income=50000,
         rrsp_interest_rate=0.05,
         tfsa_interest_rate=0.05,
-        optimize=optimize
+        optimize=optimize,
     )
 
     simulation.set_rules(career_rules)
@@ -124,6 +136,7 @@ def test_curie_runs():
 
     assert 46 == len(simulation.all_deltas)
     assert 46 == len(simulation.all_funds)
+
 
 def test_dirac_runs():
     """
@@ -139,6 +152,9 @@ def test_dirac_runs():
     simulation.initial_salary = 40000
     simulation.initial_savings_rrsp = 5000
     simulation.initial_savings_tfsa = 600
+    simulation.initial_savings_unregistered = 0
+    simulation.initial_tfsa_limit = 0
+    simulation.initial_rrsp_limit = 0
 
     optimize = solve.Optimizing_Solver(solve.binary_solver, should_invert=True)
 
@@ -156,7 +172,7 @@ def test_dirac_runs():
         retirement_income=50000,
         rrsp_interest_rate=0.05,
         tfsa_interest_rate=0.05,
-        optimize=optimize
+        optimize=optimize,
     )
 
     simulation.set_rules(career_rules)
@@ -166,6 +182,7 @@ def test_dirac_runs():
 
     assert 46 == len(simulation.all_deltas)
     assert 46 == len(simulation.all_funds)
+
 
 def test_einstein_runs():
     """
@@ -181,6 +198,9 @@ def test_einstein_runs():
     simulation.initial_salary = 40000
     simulation.initial_savings_rrsp = 5000
     simulation.initial_savings_tfsa = 600
+    simulation.initial_savings_unregistered = 0
+    simulation.initial_tfsa_limit = 0
+    simulation.initial_rrsp_limit = 0
 
     simulation.set_solver(solve.binary_solver)
 
@@ -196,7 +216,7 @@ def test_einstein_runs():
         year_of_death=simulation.year_of_death,
         retirement_income=50000,
         rrsp_interest_rate=0.05,
-        tfsa_interest_rate=0.05
+        tfsa_interest_rate=0.05,
     )
 
     simulation.set_rules(career_rules)
@@ -206,6 +226,7 @@ def test_einstein_runs():
 
     assert 46 == len(simulation.all_deltas)
     assert 46 == len(simulation.all_funds)
+
 
 def test_franklin_runs():
     """
@@ -221,6 +242,9 @@ def test_franklin_runs():
     simulation.initial_salary = 40000
     simulation.initial_savings_rrsp = 5000
     simulation.initial_savings_tfsa = 600
+    simulation.initial_savings_unregistered = 0
+    simulation.initial_tfsa_limit = 0
+    simulation.initial_rrsp_limit = 0
 
     optimize = solve.Optimizing_Solver(solve.binary_solver, should_invert=True)
 
@@ -239,7 +263,7 @@ def test_franklin_runs():
         retirement_income=50000,
         rrsp_interest_rate=0.05,
         tfsa_interest_rate=0.05,
-        optimize=optimize
+        optimize=optimize,
     )
 
     simulation.set_rules(career_rules)
@@ -249,6 +273,7 @@ def test_franklin_runs():
 
     assert 46 == len(simulation.all_deltas)
     assert 46 == len(simulation.all_funds)
+
 
 def test_galileo_runs():
     """
@@ -264,6 +289,9 @@ def test_galileo_runs():
     simulation.initial_salary = 40000
     simulation.initial_savings_rrsp = 5000
     simulation.initial_savings_tfsa = 600
+    simulation.initial_savings_unregistered = 0
+    simulation.initial_tfsa_limit = 0
+    simulation.initial_rrsp_limit = 0
 
     optimize = solve.Optimizing_Solver(solve.binary_solver, should_invert=True)
 
@@ -280,7 +308,7 @@ def test_galileo_runs():
         retirement_income=50000,
         rrsp_interest_rate=0.05,
         tfsa_interest_rate=0.05,
-        optimize=optimize
+        optimize=optimize,
     )
 
     simulation.set_rules(career_rules)
@@ -290,6 +318,7 @@ def test_galileo_runs():
 
     assert 46 == len(simulation.all_deltas)
     assert 46 == len(simulation.all_funds)
+
 
 def test_hawking_runs():
     """
@@ -305,6 +334,9 @@ def test_hawking_runs():
     simulation.initial_salary = 40000
     simulation.initial_savings_rrsp = 5000
     simulation.initial_savings_tfsa = 600
+    simulation.initial_savings_unregistered = 0
+    simulation.initial_tfsa_limit = 0
+    simulation.initial_rrsp_limit = 0
 
     optimize = solve.Optimizing_Solver(solve.binary_solver, should_invert=True)
 
@@ -323,7 +355,7 @@ def test_hawking_runs():
         rrsp_interest_rate=0.05,
         tfsa_interest_rate=0.05,
         rrsp_retirement_adjustment_guess=0,
-        optimize=optimize
+        optimize=optimize,
     )
 
     simulation.set_rules(career_rules)

@@ -9,6 +9,33 @@ class Simulation:
     """
 
     @property
+    def initial_savings_unregistered(self):
+        """The amount you already have saved in unregistered accounts at the beginning of the simulation."""
+        return self._initial_savings_unregistered
+
+    @initial_savings_unregistered.setter
+    def initial_savings_unregistered(self, value):
+        self._initial_savings_unregistered = value
+
+    @property
+    def initial_tfsa_limit(self):
+        """TFSA contribution limit at the beginning of the simulation."""
+        return self._initial_tfsa_limit
+
+    @initial_tfsa_limit.setter
+    def initial_tfsa_limit(self, value):
+        self._initial_tfsa_limit = value
+
+    @property
+    def initial_rrsp_limit(self):
+        """RRSP contribution limit at the beginning of the simulation."""
+        return self._initial_rrsp_limit
+
+    @initial_rrsp_limit.setter
+    def initial_rrsp_limit(self, value):
+        self._initial_rrsp_limit = value
+
+    @property
     def age_at_retirement(self):
         """The age at which you will retire. (Inclusive, ie this is the first year you will no longer be working.)"""
         return self._age_at_retirement
@@ -218,14 +245,13 @@ class Simulation_Run:
         year_of_retirement = self._parent.year_of_retirement
         year_of_death = self._parent.year_of_death
 
-        # TODO: initialize new funds_state quantities
         initial_funds_state = model.funds_state(
             self._parent.initial_savings_rrsp,
-            self._parent._initial_savings_tfsa,
+            self._parent.initial_savings_tfsa,
             initial_year,
-            0.0,
-            0.0,
-            0.0,
+            self._parent.initial_savings_unregistered,
+            self._parent.initial_tfsa_limit,
+            self._parent.initial_rrsp_limit,
         )
         initial_deltas_state = model.deltas_state(
             year=initial_year,
@@ -332,6 +358,33 @@ class Individual_Parameters:
     @initial_savings_tfsa.setter
     def initial_savings_tfsa(self, value):
         self._initial_savings_tfsa = value
+
+    @property
+    def initial_savings_unregistered(self):
+        """The amount this person already has saved in unregistered accounts at the beginning of the simulation."""
+        return self._initial_savings_unregistered
+
+    @initial_savings_unregistered.setter
+    def initial_savings_unregistered(self, value):
+        self._initial_savings_unregistered = value
+
+    @property
+    def initial_tfsa_limit(self):
+        """The TFSA contribution limit at the beginning of the simulation."""
+        return self._initial_tfsa_limit
+
+    @initial_tfsa_limit.setter
+    def initial_tfsa_limit(self, value):
+        self._initial_tfsa_limit = value
+
+    @property
+    def initial_rrsp_limit(self):
+        """The RRSP contribution limit at the beginning of the simulation."""
+        return self._initial_rrsp_limit
+
+    @initial_rrsp_limit.setter
+    def initial_rrsp_limit(self, value):
+        self._initial_rrsp_limit = value
 
     @property
     def year_of_retirement(self):
@@ -543,14 +596,13 @@ class Dual_Income_Simulation_Run:
     def _get_initial_funds_state_from_params(
         self, partner_params: Individual_Parameters
     ):
-        # TODO: initialize new funds_state quantities
         return model.funds_state(
             partner_params.initial_savings_rrsp,
             partner_params.initial_savings_tfsa,
             self._parent.initial_year,
-            0.0,
-            0.0,
-            0.0,
+            partner_params.initial_savings_unregistered,
+            partner_params.initial_tfsa_limit,
+            partner_params.initial_rrsp_limit,
         )
 
     def run(self):

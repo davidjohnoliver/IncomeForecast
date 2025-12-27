@@ -13,6 +13,9 @@ def test_alice_runs():
     simulation.partner1_parameters.initial_salary = 40000
     simulation.partner1_parameters.initial_savings_rrsp = 5000
     simulation.partner1_parameters.initial_savings_tfsa = 600
+    simulation.partner1_parameters.initial_savings_unregistered = 0
+    simulation.partner1_parameters.initial_tfsa_limit = 0
+    simulation.partner1_parameters.initial_rrsp_limit = 0
 
     simulation.partner2_parameters.age_at_retirement = 64
     simulation.partner2_parameters.year_of_birth = 1989
@@ -20,6 +23,9 @@ def test_alice_runs():
     simulation.partner2_parameters.initial_salary = 60000
     simulation.partner2_parameters.initial_savings_rrsp = 2000
     simulation.partner2_parameters.initial_savings_tfsa = 800
+    simulation.partner2_parameters.initial_savings_unregistered = 0
+    simulation.partner2_parameters.initial_tfsa_limit = 0
+    simulation.partner2_parameters.initial_rrsp_limit = 0
 
     simulation.initial_year = 2025
     simulation.final_savings = 10000
@@ -46,6 +52,9 @@ def test_bad_seed_runs():
     simulation.partner1_parameters.initial_salary = 40000
     simulation.partner1_parameters.initial_savings_rrsp = 5000
     simulation.partner1_parameters.initial_savings_tfsa = 600
+    simulation.partner1_parameters.initial_savings_unregistered = 0
+    simulation.partner1_parameters.initial_tfsa_limit = 0
+    simulation.partner1_parameters.initial_rrsp_limit = 0
 
     simulation.partner2_parameters.age_at_retirement = 64
     simulation.partner2_parameters.year_of_birth = 1989
@@ -53,6 +62,9 @@ def test_bad_seed_runs():
     simulation.partner2_parameters.initial_salary = 60000
     simulation.partner2_parameters.initial_savings_rrsp = 2000
     simulation.partner2_parameters.initial_savings_tfsa = 800
+    simulation.partner2_parameters.initial_savings_unregistered = 0
+    simulation.partner2_parameters.initial_tfsa_limit = 0
+    simulation.partner2_parameters.initial_rrsp_limit = 0
 
     simulation.initial_year = 2025
     simulation.final_savings = 10000
@@ -87,4 +99,3 @@ def test_bad_seed_runs():
 
     assert 46 == len(simulation.all_deltas)
     assert 46 == len(simulation.all_funds)
-
