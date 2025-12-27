@@ -6,7 +6,7 @@ def standard_previous_deltas():
     return model.deltas_state.from_year(1999)
 
 def standard_previous_funds():
-    return model.funds_state(0, 0, 1999)
+    return model.funds_state(0, 0, 1999, 0.0, 0.0, 0.0)
 
 def test_simple_increase():
     rule = salary_rules.get_compound_plateau(0.1, 80000)

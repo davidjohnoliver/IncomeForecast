@@ -65,8 +65,12 @@ def _get_updated_deltas_equalizing_rrsp_only_split(
 
     previous_deltas = model.couple_deltas_state.from_year(1998)
     previous_funds = model.couple_funds_state(
-        model.funds_state(partner1_rrsp_savings, partner1_tfsa_savings, 1998),
-        model.funds_state(partner2_rrsp_savings, partner2_tfsa_savings, 1998),
+        model.funds_state(
+            partner1_rrsp_savings, partner1_tfsa_savings, 1998, 0.0, 0.0, 0.0
+        ),
+        model.funds_state(
+            partner2_rrsp_savings, partner2_tfsa_savings, 1998, 0.0, 0.0, 0.0
+        ),
     )
 
     rule = couple_savings_rules.get_equalizing_rrsp_only_split()
