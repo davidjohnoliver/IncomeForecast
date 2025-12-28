@@ -117,7 +117,11 @@ class deltas_state:
         spending: float,
         rrsp_interest: float,
         tfsa_interest: float,
+        unregistered: float,
+        unregistered_interest: float,
         tax_refund: float,
+        tfsa_limit: float,
+        rrsp_limit: float,
     ):
         self._year = year
         self._gross_salary = gross_salary
@@ -127,11 +131,15 @@ class deltas_state:
         self._spending = spending
         self._rrsp_interest = rrsp_interest
         self._tfsa_interest = tfsa_interest
+        self._unregistered = unregistered
+        self._unregistered_interest = unregistered_interest
         self._tax_refund = tax_refund
+        self._tfsa_limit = tfsa_limit
+        self._rrsp_limit = rrsp_limit
 
     @classmethod
     def from_year(cls, year: int):
-        return deltas_state(year, 0, 0, 0, 0, 0, 0, 0, 0)
+        return deltas_state(year, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
     def _copy(self):
         output = deltas_state(
@@ -143,7 +151,11 @@ class deltas_state:
             self.spending,
             self.rrsp_interest,
             self.tfsa_interest,
+            self._unregistered,
+            self._unregistered_interest,
             self._tax_refund,
+            self._tfsa_limit,
+            self._rrsp_limit,
         )
         return output
 
@@ -236,6 +248,46 @@ class deltas_state:
     def update_tax_refund(self, new_value):
         output = self._copy()
         output._tax_refund = new_value
+        return output
+
+    @property
+    def unregistered(self):
+        """Unregistered savings delta."""
+        return self._unregistered
+
+    def update_unregistered(self, new_value):
+        output = self._copy()
+        output._unregistered = new_value
+        return output
+
+    @property
+    def unregistered_interest(self):
+        """Interest earned on unregistered savings delta."""
+        return self._unregistered_interest
+
+    def update_unregistered_interest(self, new_value):
+        output = self._copy()
+        output._unregistered_interest = new_value
+        return output
+
+    @property
+    def tfsa_limit(self):
+        """TFSA contribution room delta."""
+        return self._tfsa_limit
+
+    def update_tfsa_limit(self, new_value):
+        output = self._copy()
+        output._tfsa_limit = new_value
+        return output
+
+    @property
+    def rrsp_limit(self):
+        """RRSP contribution room delta."""
+        return self._rrsp_limit
+
+    def update_rrsp_limit(self, new_value):
+        output = self._copy()
+        output._rrsp_limit = new_value
         return output
 
     # endregion
@@ -338,9 +390,11 @@ def get_updated_funds_from_deltas(previous_funds: funds_state, deltas: deltas_st
         previous_funds.rrsp_savings + deltas.rrsp + deltas.rrsp_interest,
         previous_funds.tfsa_savings + deltas.tfsa + deltas.tfsa_interest,
         deltas.year,
-        previous_funds.unregistered_savings,  # TODO: update to apply expanded deltas
-        previous_funds.tfsa_limit,
-        previous_funds.rrsp_limit,
+        previous_funds.unregistered_savings
+        + deltas.unregistered
+        + deltas.unregistered_interest,
+        previous_funds.tfsa_limit + deltas.tfsa_limit,
+        previous_funds.rrsp_limit + deltas.rrsp_limit,
     )
 
 

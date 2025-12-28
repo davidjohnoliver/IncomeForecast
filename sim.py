@@ -262,7 +262,11 @@ class Simulation_Run:
             spending=self._initial_spending,
             rrsp_interest=0,
             tfsa_interest=0,
+            unregistered=0,
+            unregistered_interest=0,
             tax_refund=0,
+            tfsa_limit=0,
+            rrsp_limit=0,
         )
 
         initial_deltas_state = natural_rules.apply_tax(initial_deltas_state, None, None)
@@ -586,7 +590,11 @@ class Dual_Income_Simulation_Run:
             spending=0,  # spending is tracked at the household level
             rrsp_interest=0,
             tfsa_interest=0,
+            unregistered=0,
+            unregistered_interest=0,
             tax_refund=0,
+            tfsa_limit=0,
+            rrsp_limit=0,
         )
 
         initial_deltas_state = natural_rules.apply_tax(initial_deltas_state, None, None)
