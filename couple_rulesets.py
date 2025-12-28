@@ -33,6 +33,7 @@ def alice(
         couple_savings_rules.get_equalizing_rrsp_only_split(),
         rrsp_interest_rate,
         tfsa_interest_rate,
+        0,  # Unregistered interest not supported
     )
 
     return ruleset_func
@@ -80,6 +81,7 @@ def _bad_seed_raw(
         ),
         rrsp_interest_rate,
         tfsa_interest_rate,
+        0,  # Unregistered interest not supported
     )
 
     return ruleset_func

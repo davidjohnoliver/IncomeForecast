@@ -63,7 +63,7 @@ def test_apply_tax_refund(gross_salary, rrsp, rrsp_interest):
 
 def test_calculate_investment_interest():
     rule = natural_rules.get_calculate_investment_interest(
-        rrsp_interest_rate=0.04, tfsa_interest_rate=0.07
+        rrsp_interest_rate=0.04, tfsa_interest_rate=0.07, unregistered_interest_rate=0.0
     )
 
     previous_funds = model.funds_state(12000, 19000, 1672, 0.0, 0.0, 0.0)
@@ -78,3 +78,26 @@ def test_calculate_investment_interest():
 
     assert math.isclose(12480, funds.rrsp_savings)
     assert math.isclose(20330, funds.tfsa_savings)
+
+
+def test_calculate_investment_interest_with_unregistered():
+    rule = natural_rules.get_calculate_investment_interest(
+        rrsp_interest_rate=0.04,
+        tfsa_interest_rate=0.07,
+        unregistered_interest_rate=0.06,
+    )
+
+    previous_funds = model.funds_state(12000, 19000, 1672, 22000, 0.0, 0.0)
+
+    delta = model.deltas_state.from_year(1673)
+    delta = rule(delta, previous_funds, None)
+
+    assert math.isclose(480, delta.rrsp_interest)
+    assert math.isclose(1330, delta.tfsa_interest)
+    assert math.isclose(1320, delta.unregistered_interest)
+
+    funds = model.get_updated_funds_from_deltas(previous_funds, delta)
+
+    assert math.isclose(12480, funds.rrsp_savings)
+    assert math.isclose(20330, funds.tfsa_savings)
+    assert math.isclose(23320, funds.unregistered_savings)
