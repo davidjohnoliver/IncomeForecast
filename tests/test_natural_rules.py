@@ -79,6 +79,28 @@ def test_apply_tax_refund(gross_salary, rrsp, rrsp_interest):
     assert expected_refund == delta.tax_refund
 
 
+def test_apply_tax_refund_with_unregistered_interest(gross_salary, rrsp, rrsp_interest):
+    unregistered_interest = 2000
+    previous_actual_taxable_income = gross_salary + unregistered_interest - rrsp
+
+    paid_tax = tax.get_income_tax(gross_salary + unregistered_interest)
+    correct_tax = tax.get_income_tax(previous_actual_taxable_income)
+    expected_refund = paid_tax - correct_tax
+
+    previous_delta = model.deltas_state.from_year(1999)
+    previous_delta = previous_delta.update_gross_salary(gross_salary)
+    previous_delta = previous_delta.update_rrsp(rrsp)
+    previous_delta = previous_delta.update_rrsp_interest(rrsp_interest)
+    previous_delta = previous_delta.update_unregistered_interest(unregistered_interest)
+    previous_delta = natural_rules.apply_tax(previous_delta, None, None)
+
+    delta = model.deltas_state.from_year(2000)
+
+    delta = natural_rules.apply_tax_refund(delta, None, previous_delta)
+
+    assert expected_refund == delta.tax_refund
+
+
 def test_calculate_investment_interest():
     rule = natural_rules.get_calculate_investment_interest(
         rrsp_interest_rate=0.04, tfsa_interest_rate=0.07, unregistered_interest_rate=0.0

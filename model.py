@@ -300,7 +300,7 @@ class deltas_state:
     @property
     def taxable_income(self):
         """Taxable portion of salary, ie less the RRSP contribution (or mas the withdrawal)."""
-        return self.gross_salary - self.rrsp
+        return self.gross_salary + self.unregistered_interest - self.rrsp
 
     @property
     def undifferentiated_savings(self):
