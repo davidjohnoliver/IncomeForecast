@@ -41,6 +41,24 @@ def test_apply_tax(gross_salary, rrsp):
     assert expected_income_tax == delta.tax
 
 
+def test_apply_tax_with_unregistered_interest(gross_salary, rrsp):
+    if rrsp > gross_salary:
+        return  #
+
+    interest = 2000
+    taxable_income = gross_salary + interest
+
+    expected_income_tax = tax.get_income_tax(taxable_income)
+
+    delta = model.deltas_state.from_year(1999)
+    delta = delta.update_gross_salary(gross_salary)
+    delta = delta.update_rrsp(rrsp)
+    delta = delta.update_unregistered_interest(interest)
+    delta = natural_rules.apply_tax(delta, None, None)
+
+    assert expected_income_tax == delta.tax
+
+
 def test_apply_tax_refund(gross_salary, rrsp, rrsp_interest):
     previous_actual_taxable_income = gross_salary - rrsp
 

@@ -11,8 +11,8 @@ def apply_tax(
     previous_funds: model.funds_state,
     previous_deltas: model.deltas_state,
 ):
-    """Set income tax owed, *ignoring* RRSP contributions (since savings can only be calculated after the tax has been determined)."""
-    income_tax = tax.get_income_tax(deltas.gross_salary)
+    """Set income tax owed, *ignoring* RRSP contributions (since savings can only be calculated after the tax has been determined), but including income on unregistered investments."""
+    income_tax = tax.get_income_tax(deltas.gross_salary + deltas.unregistered_interest)
     return deltas.update_tax(income_tax)
 
 
@@ -38,7 +38,9 @@ def apply_tax_refund(
 
 
 def get_calculate_investment_interest(
-    rrsp_interest_rate: float, tfsa_interest_rate: float, unregistered_interest_rate: float
+    rrsp_interest_rate: float,
+    tfsa_interest_rate: float,
+    unregistered_interest_rate: float,
 ):
     """
     Gets a rule which applies compound interest to accumulate savings, according to the supplied interest rates (fractions).
