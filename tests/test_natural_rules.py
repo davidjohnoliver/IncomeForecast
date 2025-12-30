@@ -141,3 +141,25 @@ def test_calculate_investment_interest_with_unregistered():
     assert math.isclose(12480, funds.rrsp_savings)
     assert math.isclose(20330, funds.tfsa_savings)
     assert math.isclose(23320, funds.unregistered_savings)
+
+
+def test_increase_tfsa_limit():
+    rule = natural_rules.increase_tfsa_limit(500)
+
+    previous_funds = model.funds_state(
+        rrsp_savings=0.0,
+        tfsa_savings=0.0,
+        year=2000,
+        unregistered_savings=0.0,
+        tfsa_limit=1000.0,
+        rrsp_limit=0.0,
+    )
+
+    delta = model.deltas_state.from_year(2001)
+    delta = rule(delta, previous_funds, None)
+
+    assert 500 == delta.tfsa_limit
+
+    funds = model.get_updated_funds_from_deltas(previous_funds, delta)
+
+    assert 1500.0 == funds.tfsa_limit

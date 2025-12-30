@@ -64,3 +64,18 @@ def get_calculate_investment_interest(
         return output
 
     return calculate_investment_interest
+
+
+def increase_tfsa_limit(yearly_increase: float):
+    """
+    Returns a rule which sets the TFSA contribution room delta for the year to the supplied yearly_increase.
+    """
+
+    def apply_increase(
+        deltas: model.deltas_state,
+        previous_funds: model.funds_state,
+        previous_deltas: model.deltas_state,
+    ):
+        return deltas.update_tfsa_limit(yearly_increase)
+
+    return apply_increase
