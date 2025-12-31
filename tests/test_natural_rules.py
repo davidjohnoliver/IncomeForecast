@@ -163,3 +163,38 @@ def test_increase_tfsa_limit():
     funds = model.get_updated_funds_from_deltas(previous_funds, delta)
 
     assert 1500.0 == funds.tfsa_limit
+
+
+@pytest.mark.parametrize(
+    "gross, income_fraction, annual_limit, expected",
+    [
+        (100000, 0.18, 20000, 18000),
+        (200000, 0.18, 20000, 20000),
+        (0, 0.18, 20000, 0),
+    ],
+)
+def test_update_rrsp_limit(gross, income_fraction, annual_limit, expected):
+    rule = natural_rules.get_update_rrsp_limit(
+        income_fraction=income_fraction, annual_limit=annual_limit
+    )
+
+    previous_funds = model.funds_state(
+        rrsp_savings=0.0,
+        tfsa_savings=0.0,
+        year=1999,
+        unregistered_savings=0.0,
+        tfsa_limit=0.0,
+        rrsp_limit=3000.0,
+    )
+
+    previous_delta = model.deltas_state.from_year(1999)
+    previous_delta = previous_delta.update_gross_salary(gross)
+
+    delta = model.deltas_state.from_year(2000)
+    delta = rule(delta, previous_funds, previous_delta)
+
+    assert math.isclose(expected, delta.rrsp_limit)
+
+    funds = model.get_updated_funds_from_deltas(previous_funds, delta)
+
+    assert math.isclose(previous_funds.rrsp_limit + expected, funds.rrsp_limit)
