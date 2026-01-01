@@ -90,6 +90,9 @@ def get_couple_ruleset(
     rrsp_interest_rate: float,
     tfsa_interest_rate: float,
     unregistered_interest_rate: float,
+    tfsa_yearly_increase: float,
+    rrsp_income_fraction: float,
+    rrsp_annual_limit: float,
 ):
     def ruleset(
         current_year: int, is_partner1_retired: bool, is_partner2_retired: bool
@@ -106,14 +109,28 @@ def get_couple_ruleset(
                 ),
                 i,
             )
+            # Natural limits: TFSA room increase and RRSP limit based on prior-year income
+            yield model.get_couple_rule_from_single_rule(
+                natural_rules.increase_tfsa_limit(tfsa_yearly_increase),
+                i,
+            )
+            yield model.get_couple_rule_from_single_rule(
+                natural_rules.get_update_rrsp_limit(
+                    rrsp_income_fraction, rrsp_annual_limit
+                ),
+                i,
+            )
 
-        # Those who are working earn income and pay tax
+        # Those who are working earn income; both pay tax (eg on unregistered interest)
         if not is_partner1_retired:
             yield model.get_couple_rule_from_single_rule(partner1_salary_rule, 1)
-            yield model.get_couple_rule_from_single_rule(natural_rules.apply_tax, 1)
+
+        yield model.get_couple_rule_from_single_rule(natural_rules.apply_tax, 1)
+
         if not is_partner2_retired:
             yield model.get_couple_rule_from_single_rule(partner2_salary_rule, 2)
-            yield model.get_couple_rule_from_single_rule(natural_rules.apply_tax, 2)
+
+        yield model.get_couple_rule_from_single_rule(natural_rules.apply_tax, 2)
 
         yield spending_rule
         yield savings_rule

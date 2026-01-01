@@ -34,6 +34,9 @@ def alice(
         rrsp_interest_rate,
         tfsa_interest_rate,
         0,  # Unregistered interest not supported
+        0.0, # TFSA and RRSP limits not supported
+        0.0,
+        0.0,
     )
 
     return ruleset_func
@@ -82,6 +85,9 @@ def _bad_seed_raw(
         rrsp_interest_rate,
         tfsa_interest_rate,
         0,  # Unregistered interest not supported
+        0.0, # TFSA and RRSP limits not supported
+        0.0,  
+        0.0,  
     )
 
     return ruleset_func
