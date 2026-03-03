@@ -13,6 +13,15 @@ def _get_higher_and_lower_partners(deltas: model.couple_deltas_state):
         return (deltas.partner1_deltas, deltas.partner2_deltas)
 
 
+def _get_higher_and_lower_funds(
+    deltas: model.couple_deltas_state, funds: model.couple_funds_state
+):
+    if deltas.partner2_deltas.gross_salary > deltas.partner1_deltas.gross_salary:
+        return (funds.partner2_funds, funds.partner1_funds)
+    else:
+        return (funds.partner1_funds, funds.partner2_funds)
+
+
 def _update_higher_and_lower(
     deltas: model.couple_deltas_state,
     higher_delta: model.deltas_state,
@@ -35,6 +44,64 @@ def _get_rrsp_withdrawal_allotment(
     allotment += adjustment * spending
     allotment = clamp(allotment, 0, min(spending / 2, funds.rrsp_savings))
     return allotment
+
+
+def _get_household_savings_split(
+    raw_savings: float, non_rrsp_norm: float, rrsp_limit: float
+):
+    household_non_rrsp = non_rrsp_norm * raw_savings
+    household_rrsp = raw_savings - household_non_rrsp
+
+    household_rrsp = clamp(household_rrsp, 0, rrsp_limit)
+    household_non_rrsp = raw_savings - household_rrsp
+
+    return household_rrsp, household_non_rrsp
+
+
+def _get_individual_rrsp_split(
+    household_rrsp: float,
+    rrsp_higher_target: float,
+    higher_funds: model.funds_state,
+    lower_funds: model.funds_state,
+):
+    higher_limit = _get_max_allowable_rrsp_contribution(higher_funds)
+    lower_limit = _get_max_allowable_rrsp_contribution(lower_funds)
+
+    rrsp_higher = clamp(rrsp_higher_target, 0, higher_limit)
+    rrsp_lower = household_rrsp - rrsp_higher
+
+    if rrsp_lower > lower_limit:
+        rrsp_lower = lower_limit
+        rrsp_higher = household_rrsp - rrsp_lower
+
+    return rrsp_higher, rrsp_lower
+
+
+def _get_individual_tfsa_split(
+    household_non_rrsp: float,
+    higher_funds: model.funds_state,
+    lower_funds: model.funds_state,
+):
+    higher_limit = _get_max_allowable_tfsa_contribution(higher_funds)
+    lower_limit = _get_max_allowable_tfsa_contribution(lower_funds)
+
+    target_each = household_non_rrsp / 2
+
+    tfsa_higher = min(target_each, higher_limit)
+    tfsa_lower = min(target_each, lower_limit)
+
+    remaining_to_allocate = household_non_rrsp - (tfsa_higher + tfsa_lower)
+
+    if remaining_to_allocate > 0:
+        extra_higher = min(remaining_to_allocate, higher_limit - tfsa_higher)
+        tfsa_higher += extra_higher
+        remaining_to_allocate -= extra_higher
+
+        extra_lower = min(remaining_to_allocate, lower_limit - tfsa_lower)
+        tfsa_lower += extra_lower
+        remaining_to_allocate -= extra_lower
+
+    return tfsa_higher, tfsa_lower, remaining_to_allocate
 
 
 def _get_tfsa_withdrawal_allotment(funds: model.funds_state, remaining_spending: float):
@@ -152,7 +219,7 @@ def get_split_by_investment_then_partner(
         Yes:
         1. Split savings between joint RRSP and joint TFSA, according to an optimizable, linearly time-varying weighting.
         2. For RRSP, linearly interpolate between two values: the RRSP contributions that would tend to equalize taxable
-            incomes, and identical RRSP contributionsaccording to an optimizable, linearly time-varying weighting. (The
+            incomes, and identical RRSP contributions, according to an optimizable, linearly time-varying weighting. (The
             intuition here is that there's a tension between minimizing marginal taxes while working, versus minimizing
             marginal taxes after retirement, with the latter presumably served by both partners having the same total RRSP.)
         3. Split TFSA 50:50. (The intuition is it doesn't matter much, since the program doesn't currently model contribution limits.)
@@ -263,3 +330,154 @@ def get_split_by_investment_then_partner(
 
     return split_by_investment_then_partner
 
+
+def get_split_by_investment_then_partner_with_limits(
+    initial_non_rrsp: Callable[[], float],
+    final_non_rrsp: Callable[[], float],
+    initial_equalize_income_weighting: Callable[[], float],
+    final_equalize_income_weighting: Callable[[], float],
+    partner1_year_of_retirement: int,
+    partner2_year_of_retirement: int,
+    initial_year: int,
+    final_year: int,
+    rrsp_adjustment_func: Callable[[], float],
+):
+    """
+    A modified version of get_split_by_investment_then_partner that respects TFSA and RRSP limits.
+
+    Get a savings allocation rule that follows the strategy:
+    . Is the couple 'functionally working' (ie their net income exceeds their spending)?
+        Yes:
+        1. Split savings between joint RRSP and joint TFSA/unregistered, according to an optimizable, linearly time-varying weighting.
+        2. For RRSP, linearly interpolate between two values: the RRSP contributions that would tend to equalize taxable
+            incomes, and identical RRSP contributions, according to an optimizable, linearly time-varying weighting. (The
+            intuition here is that there's a tension between minimizing marginal taxes while working, versus minimizing
+            marginal taxes after retirement, with the latter presumably served by both partners having the same total RRSP.)
+        3. For remaining contribution, put into TFSA up to the current combined limit.
+        4. Put any remaining contribution into the unregistered savings of the partner who paid the lowest tax (before refund) in the previous year.
+
+        No, the couple is 'functionally retired':
+        1. Get RRSP withdrawal for each partner by taking a year's worth of their remaining RRSP, adjusted by an optimizable correction
+            factor, and clamped to be less than their remaining RRSP, less than combined spending / 2, and greater than 0.
+        2. Get TFSA withdrawal for each partner as half of remaining spending to cover, clamped to be within their remaining total TFSA.
+        3. Adjust each withdrawal upwards equally within the limits of remaining funds to cover target spending. If all funds are depleted,
+            overdraw from partner 2's TFSA. (This is only of internal technical interest, since the simulation should discard runs where
+            this occurs.)
+
+        Since this rule switches from 'both partners contributing to savings' to 'both partners withdrawing from savings' with no mixed mode,
+        it's most appropriate for cases where both partners retire fairly closely together. It may give poor results if one partner retires much later
+        than the other.
+    """
+
+    estimated_year_of_functional_retirement = (
+        partner1_year_of_retirement + partner2_year_of_retirement
+    ) / 2  # This is not very robust, but we are not trying here very seriously to support widely divergent years of retirement
+
+    def split_by_investment_then_partner(
+        deltas: model.couple_deltas_state,
+        previous_funds: model.couple_funds_state,
+        previous_deltas: model.couple_deltas_state,
+    ):
+        raw_savings = deltas.household_undifferentiated_savings
+        if (
+            raw_savings >= 0
+        ):  # The couple is 'functionally working', ie their salaried net income exceeds their spending (though one of the partners may have retired)
+            t = (deltas.year - initial_year) / (
+                estimated_year_of_functional_retirement - initial_year
+            )
+            non_rrsp_norm = lerp(initial_non_rrsp(), final_non_rrsp(), t)
+
+            current_funds = model.get_updated_couple_funds_from_deltas(previous_funds, deltas)
+            rrsp_limit = _get_total_max_allowable_rrsp_contribution(current_funds)
+            household_rrsp, household_non_rrsp = _get_household_savings_split(raw_savings, non_rrsp_norm, rrsp_limit)
+            equalize_income_weighting = lerp(
+                initial_equalize_income_weighting(),
+                final_equalize_income_weighting(),
+                t,
+            )
+            higher, lower = _get_higher_and_lower_partners(deltas)
+            higher_funds, lower_funds = _get_higher_and_lower_funds(deltas, current_funds)
+            salary_diff = higher.gross_salary - lower.gross_salary
+            rrsp_equalize_income = (
+                household_rrsp
+                if salary_diff > household_rrsp
+                else salary_diff + (household_rrsp - salary_diff) / 2
+            )
+            rrsp_equal_contribution = household_rrsp / 2
+            rrsp_higher_target = lerp(
+                rrsp_equal_contribution, rrsp_equalize_income, equalize_income_weighting
+            )
+
+            rrsp_higher, rrsp_lower = _get_individual_rrsp_split(household_rrsp, rrsp_higher_target, higher_funds, lower_funds)
+
+            tfsa_higher, tfsa_lower, remainder = _get_individual_tfsa_split(household_non_rrsp, higher_funds, lower_funds)
+
+            higher = higher.update_tfsa(tfsa_higher).update_rrsp(rrsp_higher)
+            lower = lower.update_tfsa(tfsa_lower).update_rrsp(rrsp_lower).update_unregistered(remainder)
+            return _update_higher_and_lower(deltas, higher, lower)
+
+        else:  # raw_savings < 0, The couple is 'functionally retired', ie their spending exceeds their salaried net income (though one of the partners may still be working)
+            rrsp_adjustment = rrsp_adjustment_func()
+            years_remaining = final_year - deltas.year
+
+            spending = (
+                -raw_savings
+            )  # Flip the sign to deal with positive numbers and save brain cells
+            rrsp_partner1 = _get_rrsp_withdrawal_allotment(
+                previous_funds.partner1_funds,
+                years_remaining,
+                rrsp_adjustment,
+                spending,
+            )
+            rrsp_partner2 = _get_rrsp_withdrawal_allotment(
+                previous_funds.partner2_funds,
+                years_remaining,
+                rrsp_adjustment,
+                spending,
+            )
+
+            remaining_spending = spending - rrsp_partner1 - rrsp_partner2
+            tfsa_partner1 = _get_tfsa_withdrawal_allotment(
+                previous_funds.partner1_funds, remaining_spending
+            )
+            tfsa_partner2 = _get_tfsa_withdrawal_allotment(
+                previous_funds.partner2_funds, remaining_spending
+            )
+
+            allotments_and_limits = [
+                (rrsp_partner1, previous_funds.partner1_funds.rrsp_savings),
+                (rrsp_partner2, previous_funds.partner2_funds.rrsp_savings),
+                (tfsa_partner1, previous_funds.partner1_funds.tfsa_savings),
+                (tfsa_partner2, previous_funds.partner2_funds.tfsa_savings),
+            ]
+            allotments_and_limits = _adjust_values_to_produce_sum(
+                allotments_and_limits, spending
+            )
+            allotments = [-x[0] for x in allotments_and_limits]  # Flip the sign back
+
+            partner1_deltas = deltas.partner1_deltas.update_rrsp(
+                allotments[0]
+            ).update_tfsa(allotments[2])
+            partner2_deltas = deltas.partner2_deltas.update_rrsp(
+                allotments[1]
+            ).update_tfsa(allotments[3])
+
+            return deltas.update_partner1_deltas(
+                partner1_deltas
+            ).update_partner2_deltas(partner2_deltas)
+
+    return split_by_investment_then_partner
+
+
+def _get_max_allowable_rrsp_contribution(funds: model.funds_state) -> float:
+    return funds.rrsp_limit - funds.rrsp_savings
+
+
+def _get_max_allowable_tfsa_contribution(funds: model.funds_state) -> float:
+    return funds.tfsa_limit - funds.tfsa_savings
+
+def _get_total_max_allowable_rrsp_contribution(funds: model.couple_funds_state) -> float:
+    return _get_max_allowable_rrsp_contribution(funds.partner1_funds)+_get_max_allowable_rrsp_contribution(funds.partner2_funds)
+
+def _get_total_max_allowable_tfsa_contribution(funds: model.couple_funds_state) -> float:
+    return _get_max_allowable_tfsa_contribution(funds.partner1_funds)+_get_max_allowable_tfsa_contribution(funds.partner2_funds)
