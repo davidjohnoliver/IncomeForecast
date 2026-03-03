@@ -155,15 +155,15 @@ def bad_seed(
     )
 
 
-def charlie_raw(
+def _charlie_raw(
     partner1_salary_compound_rate: float,
     partner1_salary_plateau: float,
     partner2_salary_compound_rate: float,
     partner2_salary_plateau: float,
     initial_year: int,
     increase_savings_weight: float,
-    initial_tfsa_func: Callable[[], float],
-    final_tfsa_func: Callable[[], float],
+    initial_non_rrsp_func: Callable[[], float],
+    final_non_rrsp_func: Callable[[], float],
     initial_equalize_income_weighting_func: Callable[[], float],
     final_equalize_income_weighting_func: Callable[[], float],
     partner1_year_of_retirement: int,
@@ -172,6 +172,10 @@ def charlie_raw(
     rrsp_adjustment_func: Callable[[], float],
     rrsp_interest_rate: float,
     tfsa_interest_rate: float,
+    unregistered_interest_rate: float,
+    tfsa_yearly_increase: float,
+    rrsp_income_fraction: float,
+    rrsp_annual_limit: float,
 ):
 
     ruleset_func = ruleset.get_couple_ruleset(
@@ -184,9 +188,9 @@ def charlie_raw(
         couple_spending_rules.get_increasing_savings_increasing_spending(
             initial_year, increase_savings_weight
         ),
-        couple_savings_rules.get_split_by_investment_then_partner(
-            initial_tfsa_func,
-            final_tfsa_func,
+        couple_savings_rules.get_split_by_investment_then_partner_with_limits(
+            initial_non_rrsp_func,
+            final_non_rrsp_func,
             initial_equalize_income_weighting_func,
             final_equalize_income_weighting_func,
             partner1_year_of_retirement,
@@ -197,10 +201,10 @@ def charlie_raw(
         ),
         rrsp_interest_rate,
         tfsa_interest_rate,
-        0,  # Unregistered interest not supported
-        0.0, # TFSA and RRSP limits not supported
-        0.0,
-        0.0,
+        unregistered_interest_rate,
+        tfsa_yearly_increase,
+        rrsp_income_fraction,
+        rrsp_annual_limit,
     )
 
     return ruleset_func
@@ -213,8 +217,8 @@ def charlie(
     partner2_salary_plateau: float,
     initial_year: int,
     increase_savings_weight: float,
-    initial_tfsa_guess: float,
-    final_tfsa_guess: float,
+    initial_non_rrsp_guess: float,
+    final_non_rrsp_guess: float,
     initial_equalize_income_weighting_guess: float,
     final_equalize_income_weighting_guess: float,
     partner1_year_of_retirement: int,
@@ -223,17 +227,21 @@ def charlie(
     rrsp_adjustment_guess: float,
     rrsp_interest_rate: float,
     tfsa_interest_rate: float,
+    unregistered_interest_rate: float,
+    tfsa_yearly_increase: float,
+    rrsp_income_fraction: float,
+    rrsp_annual_limit: float,
     optimize: solve.Optimizing_Solver,
 ):
     """
-    A dual-income ruleset which uses the increasing_savings_increasing_spending rule for spending vs. saving, and the split_by_investment_then_partner rule for savings allocations
+    A dual-income ruleset which uses the increasing_savings_increasing_spending rule for spending vs. saving, and the split_by_investment_then_partner_with_limits rule for savings allocations
     """
 
-    initial_tfsa_func = optimize.subscribe_optimized_scalar(
-        "initial_tfsa", 0, 1, initial_tfsa_guess
+    initial_non_rrsp_func = optimize.subscribe_optimized_scalar(
+        "initial_non_rrsp", 0, 1, initial_non_rrsp_guess
     )
-    final_tfsa_func = optimize.subscribe_optimized_scalar(
-        "final_tfsa", 0, 1, final_tfsa_guess
+    final_non_rrsp_func = optimize.subscribe_optimized_scalar(
+        "final_non_rrsp", 0, 1, final_non_rrsp_guess
     )
     initial_equalize_income_weighting_func = optimize.subscribe_optimized_scalar(
         "initial_equalize_income_weighting",
@@ -248,15 +256,15 @@ def charlie(
         "rrsp_adjustment", -1, 1, rrsp_adjustment_guess
     )
 
-    return charlie_raw(
+    return _charlie_raw(
         partner1_salary_compound_rate,
         partner1_salary_plateau,
         partner2_salary_compound_rate,
         partner2_salary_plateau,
         initial_year,
         increase_savings_weight,
-        initial_tfsa_func,
-        final_tfsa_func,
+        initial_non_rrsp_func,
+        final_non_rrsp_func,
         initial_equalize_income_weighting_func,
         final_equalize_income_weighting_func,
         partner1_year_of_retirement,
@@ -265,4 +273,8 @@ def charlie(
         rrsp_adjustment_func,
         rrsp_interest_rate,
         tfsa_interest_rate,
+        unregistered_interest_rate,
+        tfsa_yearly_increase,
+        rrsp_income_fraction,
+        rrsp_annual_limit,
     )
