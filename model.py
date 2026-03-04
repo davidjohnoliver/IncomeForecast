@@ -393,8 +393,8 @@ def get_updated_funds_from_deltas(previous_funds: funds_state, deltas: deltas_st
         previous_funds.unregistered_savings
         + deltas.unregistered
         + deltas.unregistered_interest,
-        previous_funds.tfsa_limit + deltas.tfsa_limit,
-        previous_funds.rrsp_limit + deltas.rrsp_limit,
+        previous_funds.tfsa_limit + deltas.tfsa_limit - deltas.tfsa,
+        previous_funds.rrsp_limit + deltas.rrsp_limit - max(0, deltas.rrsp),
     )
 
 

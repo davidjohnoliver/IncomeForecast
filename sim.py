@@ -250,8 +250,8 @@ class Simulation_Run:
             self._parent.initial_savings_tfsa,
             initial_year,
             self._parent.initial_savings_unregistered,
-            self._parent.initial_tfsa_limit,
-            self._parent.initial_rrsp_limit,
+            self._parent.initial_tfsa_limit - self._parent.initial_savings_tfsa,
+            self._parent.initial_rrsp_limit - self._parent.initial_savings_rrsp,
         )
         initial_deltas_state = model.deltas_state(
             year=initial_year,
@@ -609,8 +609,8 @@ class Dual_Income_Simulation_Run:
             partner_params.initial_savings_tfsa,
             self._parent.initial_year,
             partner_params.initial_savings_unregistered,
-            partner_params.initial_tfsa_limit,
-            partner_params.initial_rrsp_limit,
+            partner_params.initial_tfsa_limit - partner_params.initial_savings_tfsa,
+            partner_params.initial_rrsp_limit - partner_params.initial_savings_rrsp,
         )
 
     def run(self):

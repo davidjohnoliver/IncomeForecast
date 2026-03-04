@@ -96,3 +96,50 @@ def test_adjust_values_to_produce_sum_no_valid_solution():
         values_and_limits, target_sum
     )
     assert values_and_limits == [(12, 12), (4, 4), (3, 3), (31, 0)]
+
+
+def test_get_max_allowable_tfsa_contribution_with_withdrawal():
+    # TFSA withdrawal should increase contribution room
+    # We test this by looking at how the state is updated in model.py
+
+    year = 2025
+    previous_funds = model.funds_state(
+        rrsp_savings=0,
+        tfsa_savings=10000,
+        year=year,
+        unregistered_savings=0,
+        tfsa_limit=5000,  # Remaining room
+        rrsp_limit=0,
+    )
+
+    deltas = model.deltas_state.from_year(year + 1)
+    deltas = deltas.update_tfsa(-2000)  # Withdrawal of 2000
+
+    new_funds = model.get_updated_funds_from_deltas(previous_funds, deltas)
+
+    # New room should be 5000 (old) + 2000 (withdrawn) = 7000
+    assert new_funds.tfsa_limit == 7000
+    assert new_funds.tfsa_savings == 8000
+
+
+def test_get_max_allowable_rrsp_contribution_with_withdrawal():
+    # RRSP withdrawal should NOT increase contribution room
+
+    year = 2025
+    previous_funds = model.funds_state(
+        rrsp_savings=10000,
+        tfsa_savings=0,
+        year=year,
+        unregistered_savings=0,
+        tfsa_limit=0,
+        rrsp_limit=5000,  # Remaining room
+    )
+
+    deltas = model.deltas_state.from_year(year + 1)
+    deltas = deltas.update_rrsp(-2000)  # Withdrawal of 2000
+
+    new_funds = model.get_updated_funds_from_deltas(previous_funds, deltas)
+
+    # New room should still be 5000
+    assert new_funds.rrsp_limit == 5000
+    assert new_funds.rrsp_savings == 8000
