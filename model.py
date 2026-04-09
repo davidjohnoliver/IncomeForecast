@@ -17,15 +17,15 @@ class funds_state:
         tfsa_savings: float,
         year: int,
         unregistered_savings: float,
-        tfsa_limit: float,
-        rrsp_limit: float,
+        tfsa_available_room: float,
+        rrsp_available_room: float,
     ):
         self.rrsp_savings = rrsp_savings
         self.tfsa_savings = tfsa_savings
         self.year = year
         self.unregistered_savings = unregistered_savings
-        self.tfsa_limit = tfsa_limit
-        self.rrsp_limit = rrsp_limit
+        self.tfsa_available_room = tfsa_available_room
+        self.rrsp_available_room = rrsp_available_room
 
     @property
     def unregistered_savings(self) -> float:
@@ -36,20 +36,20 @@ class funds_state:
         self._unregistered_savings = value
 
     @property
-    def tfsa_limit(self) -> float:
-        return self._tfsa_limit
+    def tfsa_available_room(self) -> float:
+        return self._tfsa_available_room
 
-    @tfsa_limit.setter
-    def tfsa_limit(self, value: float):
-        self._tfsa_limit = value
+    @tfsa_available_room.setter
+    def tfsa_available_room(self, value: float):
+        self._tfsa_available_room = value
 
     @property
-    def rrsp_limit(self) -> float:
-        return self._rrsp_limit
+    def rrsp_available_room(self) -> float:
+        return self._rrsp_available_room
 
-    @rrsp_limit.setter
-    def rrsp_limit(self, value: float):
-        self._rrsp_limit = value
+    @rrsp_available_room.setter
+    def rrsp_available_room(self, value: float):
+        self._rrsp_available_room = value
 
 
 class couple_funds_state:
@@ -66,13 +66,13 @@ class couple_funds_state:
         partner1_rrsp_savings: float,
         partner1_tfsa_savings: float,
         partner1_unregistered_savings: float,
-        partner1_tfsa_limit: float,
-        partner1_rrsp_limit: float,
+        partner1_tfsa_available_room: float,
+        partner1_rrsp_available_room: float,
         partner2_rrsp_savings: float,
         partner2_tfsa_savings: float,
         partner2_unregistered_savings: float,
-        partner2_tfsa_limit: float,
-        partner2_rrsp_limit: float,
+        partner2_tfsa_available_room: float,
+        partner2_rrsp_available_room: float,
         year: int,
     ):
         partner1_funds = funds_state(
@@ -80,16 +80,16 @@ class couple_funds_state:
             partner1_tfsa_savings,
             year,
             partner1_unregistered_savings,
-            partner1_tfsa_limit,
-            partner1_rrsp_limit,
+            partner1_tfsa_available_room,
+            partner1_rrsp_available_room,
         )
         partner2_funds = funds_state(
             partner2_rrsp_savings,
             partner2_tfsa_savings,
             year,
             partner2_unregistered_savings,
-            partner2_tfsa_limit,
-            partner2_rrsp_limit,
+            partner2_tfsa_available_room,
+            partner2_rrsp_available_room,
         )
         return couple_funds_state(partner1_funds, partner2_funds)
 
@@ -120,8 +120,8 @@ class deltas_state:
         unregistered: float,
         unregistered_interest: float,
         tax_refund: float,
-        tfsa_limit: float,
-        rrsp_limit: float,
+        tfsa_available_room: float,
+        rrsp_available_room: float,
     ):
         self._year = year
         self._gross_salary = gross_salary
@@ -134,8 +134,8 @@ class deltas_state:
         self._unregistered = unregistered
         self._unregistered_interest = unregistered_interest
         self._tax_refund = tax_refund
-        self._tfsa_limit = tfsa_limit
-        self._rrsp_limit = rrsp_limit
+        self._tfsa_available_room = tfsa_available_room
+        self._rrsp_available_room = rrsp_available_room
 
     @classmethod
     def from_year(cls, year: int):
@@ -154,8 +154,8 @@ class deltas_state:
             self._unregistered,
             self._unregistered_interest,
             self._tax_refund,
-            self._tfsa_limit,
-            self._rrsp_limit,
+            self._tfsa_available_room,
+            self._rrsp_available_room,
         )
         return output
 
@@ -271,23 +271,23 @@ class deltas_state:
         return output
 
     @property
-    def tfsa_limit(self):
+    def tfsa_available_room(self):
         """TFSA contribution room delta."""
-        return self._tfsa_limit
+        return self._tfsa_available_room
 
-    def update_tfsa_limit(self, new_value):
+    def update_tfsa_available_room(self, new_value):
         output = self._copy()
-        output._tfsa_limit = new_value
+        output._tfsa_available_room = new_value
         return output
 
     @property
-    def rrsp_limit(self):
+    def rrsp_available_room(self):
         """RRSP contribution room delta."""
-        return self._rrsp_limit
+        return self._rrsp_available_room
 
-    def update_rrsp_limit(self, new_value):
+    def update_rrsp_available_room(self, new_value):
         output = self._copy()
-        output._rrsp_limit = new_value
+        output._rrsp_available_room = new_value
         return output
 
     # endregion
@@ -393,8 +393,8 @@ def get_updated_funds_from_deltas(previous_funds: funds_state, deltas: deltas_st
         previous_funds.unregistered_savings
         + deltas.unregistered
         + deltas.unregistered_interest,
-        previous_funds.tfsa_limit + deltas.tfsa_limit - deltas.tfsa,
-        previous_funds.rrsp_limit + deltas.rrsp_limit - max(0, deltas.rrsp),
+        previous_funds.tfsa_available_room + deltas.tfsa_available_room - deltas.tfsa,
+        previous_funds.rrsp_available_room + deltas.rrsp_available_room - max(0, deltas.rrsp),
     )
 
 

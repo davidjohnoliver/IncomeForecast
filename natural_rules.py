@@ -76,7 +76,7 @@ def increase_tfsa_limit(yearly_increase: float):
         previous_funds: model.funds_state,
         previous_deltas: model.deltas_state,
     ):
-        return deltas.update_tfsa_limit(yearly_increase)
+        return deltas.update_tfsa_available_room(yearly_increase)
 
     return apply_increase
 
@@ -92,7 +92,7 @@ def get_update_rrsp_limit(income_fraction: float, annual_limit: float):
         previous_funds: model.funds_state,
         previous_deltas: model.deltas_state,
     ):
-        return deltas.update_rrsp_limit(
+        return deltas.update_rrsp_available_room(
             min(
                 # RRSP limit is calculated from 'earned income' which includes salary, bonuses etc, but not investment interest, dividends, other 'passive income'
                 income_fraction * previous_deltas.gross_salary,

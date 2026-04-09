@@ -75,8 +75,8 @@ def test_linear_retirement_deduction_func():
         tfsa_savings=1000000,
         year=0,
         unregistered_savings=0.0,
-        tfsa_limit=0.0,
-        rrsp_limit=0.0,
+        tfsa_available_room=0.0,
+        rrsp_available_room=0.0,
     )
 
     deltas_2022 = model.deltas_state.from_year(2022)

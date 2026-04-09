@@ -143,7 +143,7 @@ def test_calculate_investment_interest_with_unregistered():
     assert math.isclose(23320, funds.unregistered_savings)
 
 
-def test_increase_tfsa_limit():
+def test_increase_tfsa_available_room():
     rule = natural_rules.increase_tfsa_limit(500)
 
     previous_funds = model.funds_state(
@@ -151,18 +151,18 @@ def test_increase_tfsa_limit():
         tfsa_savings=0.0,
         year=2000,
         unregistered_savings=0.0,
-        tfsa_limit=1000.0,
-        rrsp_limit=0.0,
+        tfsa_available_room=1000.0,
+        rrsp_available_room=0.0,
     )
 
     delta = model.deltas_state.from_year(2001)
     delta = rule(delta, previous_funds, None)
 
-    assert 500 == delta.tfsa_limit
+    assert 500 == delta.tfsa_available_room
 
     funds = model.get_updated_funds_from_deltas(previous_funds, delta)
 
-    assert 1500.0 == funds.tfsa_limit
+    assert 1500.0 == funds.tfsa_available_room
 
 
 @pytest.mark.parametrize(
@@ -173,7 +173,7 @@ def test_increase_tfsa_limit():
         (0, 0.18, 20000, 0),
     ],
 )
-def test_update_rrsp_limit(gross, income_fraction, annual_limit, expected):
+def test_update_rrsp_available_room(gross, income_fraction, annual_limit, expected):
     rule = natural_rules.get_update_rrsp_limit(
         income_fraction=income_fraction, annual_limit=annual_limit
     )
@@ -183,8 +183,8 @@ def test_update_rrsp_limit(gross, income_fraction, annual_limit, expected):
         tfsa_savings=0.0,
         year=1999,
         unregistered_savings=0.0,
-        tfsa_limit=0.0,
-        rrsp_limit=3000.0,
+        tfsa_available_room=0.0,
+        rrsp_available_room=3000.0,
     )
 
     previous_delta = model.deltas_state.from_year(1999)
@@ -193,8 +193,8 @@ def test_update_rrsp_limit(gross, income_fraction, annual_limit, expected):
     delta = model.deltas_state.from_year(2000)
     delta = rule(delta, previous_funds, previous_delta)
 
-    assert math.isclose(expected, delta.rrsp_limit)
+    assert math.isclose(expected, delta.rrsp_available_room)
 
     funds = model.get_updated_funds_from_deltas(previous_funds, delta)
 
-    assert math.isclose(previous_funds.rrsp_limit + expected, funds.rrsp_limit)
+    assert math.isclose(previous_funds.rrsp_available_room + expected, funds.rrsp_available_room)

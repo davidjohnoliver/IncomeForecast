@@ -470,11 +470,11 @@ def get_split_by_investment_then_partner_with_limits(
 
 
 def _get_max_allowable_rrsp_contribution(funds: model.funds_state) -> float:
-    return funds.rrsp_limit
+    return funds.rrsp_available_room
 
 
 def _get_max_allowable_tfsa_contribution(funds: model.funds_state) -> float:
-    return funds.tfsa_limit
+    return funds.tfsa_available_room
 
 def _get_total_max_allowable_rrsp_contribution(funds: model.couple_funds_state) -> float:
     return _get_max_allowable_rrsp_contribution(funds.partner1_funds)+_get_max_allowable_rrsp_contribution(funds.partner2_funds)

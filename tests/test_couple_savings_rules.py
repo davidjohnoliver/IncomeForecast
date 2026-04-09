@@ -108,8 +108,8 @@ def test_get_max_allowable_tfsa_contribution_with_withdrawal():
         tfsa_savings=10000,
         year=year,
         unregistered_savings=0,
-        tfsa_limit=5000,  # Remaining room
-        rrsp_limit=0,
+        tfsa_available_room=5000,  # Remaining room
+        rrsp_available_room=0,
     )
 
     deltas = model.deltas_state.from_year(year + 1)
@@ -118,7 +118,7 @@ def test_get_max_allowable_tfsa_contribution_with_withdrawal():
     new_funds = model.get_updated_funds_from_deltas(previous_funds, deltas)
 
     # New room should be 5000 (old) + 2000 (withdrawn) = 7000
-    assert new_funds.tfsa_limit == 7000
+    assert new_funds.tfsa_available_room == 7000
     assert new_funds.tfsa_savings == 8000
 
 
@@ -131,8 +131,8 @@ def test_get_max_allowable_rrsp_contribution_with_withdrawal():
         tfsa_savings=0,
         year=year,
         unregistered_savings=0,
-        tfsa_limit=0,
-        rrsp_limit=5000,  # Remaining room
+        tfsa_available_room=0,
+        rrsp_available_room=5000,  # Remaining room
     )
 
     deltas = model.deltas_state.from_year(year + 1)
@@ -141,5 +141,5 @@ def test_get_max_allowable_rrsp_contribution_with_withdrawal():
     new_funds = model.get_updated_funds_from_deltas(previous_funds, deltas)
 
     # New room should still be 5000
-    assert new_funds.rrsp_limit == 5000
+    assert new_funds.rrsp_available_room == 5000
     assert new_funds.rrsp_savings == 8000
