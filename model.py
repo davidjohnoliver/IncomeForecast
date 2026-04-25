@@ -122,6 +122,7 @@ class deltas_state:
         tax_refund: float,
         tfsa_available_room: float,
         rrsp_available_room: float,
+        debt_payments: float,
     ):
         self._year = year
         self._gross_salary = gross_salary
@@ -136,10 +137,11 @@ class deltas_state:
         self._tax_refund = tax_refund
         self._tfsa_available_room = tfsa_available_room
         self._rrsp_available_room = rrsp_available_room
+        self._debt_payments = debt_payments
 
     @classmethod
     def from_year(cls, year: int):
-        return deltas_state(year, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        return deltas_state(year, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
 
     def _copy(self):
         output = deltas_state(
@@ -156,6 +158,7 @@ class deltas_state:
             self._tax_refund,
             self._tfsa_available_room,
             self._rrsp_available_room,
+            self.debt_payments,
         )
         return output
 
@@ -290,6 +293,16 @@ class deltas_state:
         output._rrsp_available_room = new_value
         return output
 
+    @property
+    def debt_payments(self):
+        """Payments of outstanding debt. This currently doesn't correspond to any funds_state value."""
+        return self._debt_payments
+
+    def update_debt_payments(self, new_value):
+        output = self._copy()
+        output._debt_payments = new_value
+        return output
+
     # endregion
 
     @property
@@ -305,7 +318,7 @@ class deltas_state:
     @property
     def undifferentiated_savings(self):
         """Total savings available to be split between RRSP and TFSA."""
-        return self.total_net_income - self.spending
+        return self.total_net_income - self.spending - self.debt_payments
 
 
 class couple_deltas_state:
@@ -316,21 +329,26 @@ class couple_deltas_state:
         partner1_deltas: deltas_state,
         partner2_deltas: deltas_state,
         household_spending: float,
+        household_debt_payments: float,
     ) -> None:
         assert partner1_deltas.year == partner2_deltas.year
         self._partner1_deltas = partner1_deltas
         self._partner2_deltas = partner2_deltas
         self._household_spending = household_spending
+        self._household_debt_payments = household_debt_payments
 
     @classmethod
     def from_year(cls, year: int):
         return couple_deltas_state(
-            deltas_state.from_year(year), deltas_state.from_year(year), 0
+            deltas_state.from_year(year), deltas_state.from_year(year), 0, 0
         )
 
     def copy(self):
         output = couple_deltas_state(
-            self._partner1_deltas, self._partner2_deltas, self._household_spending
+            self._partner1_deltas,
+            self._partner2_deltas,
+            self._household_spending,
+            self._household_debt_payments,
         )
         return output
 
@@ -368,6 +386,16 @@ class couple_deltas_state:
         return output
 
     @property
+    def household_debt_payments(self):
+        """Payments of outstanding debt. This currently doesn't correspond to any funds_state value."""
+        return self._household_debt_payments
+
+    def update_household_debt_payments(self, new_value: float):
+        output = self.copy()
+        output._household_debt_payments = new_value
+        return output
+
+    @property
     def household_total_net_income(self):
         return (
             self.partner1_deltas.total_net_income
@@ -377,7 +405,11 @@ class couple_deltas_state:
     @property
     def household_undifferentiated_savings(self):
         """Total savings available to be split between RRSPs and TFSAs."""
-        return self.household_total_net_income - self.household_spending
+        return (
+            self.household_total_net_income
+            - self.household_spending
+            - self.household_debt_payments
+        )
 
 
 def get_updated_funds_from_deltas(previous_funds: funds_state, deltas: deltas_state):
@@ -394,7 +426,9 @@ def get_updated_funds_from_deltas(previous_funds: funds_state, deltas: deltas_st
         + deltas.unregistered
         + deltas.unregistered_interest,
         previous_funds.tfsa_available_room + deltas.tfsa_available_room - deltas.tfsa,
-        previous_funds.rrsp_available_room + deltas.rrsp_available_room - max(0, deltas.rrsp),
+        previous_funds.rrsp_available_room
+        + deltas.rrsp_available_room
+        - max(0, deltas.rrsp),
     )
 
 

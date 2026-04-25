@@ -267,6 +267,7 @@ class Simulation_Run:
             tax_refund=0,
             tfsa_available_room=0,
             rrsp_available_room=0,
+            debt_payments=0,
         )
 
 
@@ -596,6 +597,7 @@ class Dual_Income_Simulation_Run:
             tax_refund=0,
             tfsa_available_room=0,
             rrsp_available_room=0,
+            debt_payments=0,
         )
 
         initial_deltas_state = natural_rules.apply_tax(initial_deltas_state, None, None)
@@ -626,6 +628,7 @@ class Dual_Income_Simulation_Run:
             self._get_initial_deltas_state_from_params(partner1_params),
             self._get_initial_deltas_state_from_params(partner2_params),
             self._initial_spending,
+            0,
         )
 
         previous_deltas = initial_deltas_state

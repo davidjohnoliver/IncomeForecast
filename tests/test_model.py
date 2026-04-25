@@ -10,6 +10,9 @@ def test_calculated_delta_values():
     assert 11700 == deltas.total_net_income
     assert 11640 == deltas.undifferentiated_savings
 
+    deltas = deltas.update_debt_payments(500)
+    assert 11140 == deltas.undifferentiated_savings
+
 
 def test_get_updated_funds_from_deltas():
     year = 2040
