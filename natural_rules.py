@@ -101,3 +101,72 @@ def get_update_rrsp_limit(income_fraction: float, annual_limit: float):
         )
 
     return apply_update
+
+
+def calculate_yearly_mortgage_payment(
+    principal: float,
+    amortization_length: int,
+    interest: float,
+) -> float:
+    """
+    Calculates the yearly mortgage payment based on Canadian standard: semi-annual compounding, monthly payments.
+    """
+    if amortization_length <= 0:
+        raise ValueError("amortization_length must be greater than 0")
+
+    # Constants for standard Canadian mortgage: semi-annual compounding, monthly payments
+    compounding_frequency = 2
+    payment_frequency = 12
+
+    # Calculate effective periodic (monthly) rate
+    # equivalent to Math.pow(1 + nominal_rate / compounding_freq, compounding_freq / payment_freq) - 1
+    periodic_rate = (1 + interest / compounding_frequency) ** (
+        compounding_frequency / payment_frequency
+    ) - 1
+
+    # Total number of payments
+    total_payments = amortization_length * payment_frequency
+
+    # Calculate periodic payment
+    # equivalent to principal / ((1 - Math.pow(1 + periodic_rate, -1 * total_payments)) / periodic_rate)
+    if periodic_rate > 0:
+        monthly_payment = principal / (
+            (1 - (1 + periodic_rate) ** (-total_payments)) / periodic_rate
+        )
+    else:
+        monthly_payment = principal / total_payments
+
+    return monthly_payment * payment_frequency
+
+
+def get_mortgage_payment(
+    remaining_principal: float,
+    initial_remaining_amortization_length: int,
+    mortgage_interest: float,
+    initial_year: int,
+):
+    """
+    Returns a rule which deducts mortgage repayments, over a period of amortization.
+
+    This is currently geared towards a 'primary residence' scenario. Mortgage payments are treated as essentially disappearing into the ether, under the implicit assumption that it will be fully paid off at the end of the simulation and held as an asset.
+    """
+
+    yearly_payment = calculate_yearly_mortgage_payment(
+        remaining_principal, initial_remaining_amortization_length, mortgage_interest
+    )
+
+    end_year = initial_year + initial_remaining_amortization_length
+
+    def mortgage_payment(
+        deltas: model.deltas_state,
+        previous_funds: model.funds_state,
+        previous_deltas: model.deltas_state,
+    ):
+        if deltas.year < end_year:
+            output_deltas = deltas.update_debt_payments(
+                deltas.debt_payments + yearly_payment
+            )
+            return output_deltas
+        return deltas
+
+    return mortgage_payment

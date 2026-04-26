@@ -198,3 +198,60 @@ def test_update_rrsp_available_room(gross, income_fraction, annual_limit, expect
     funds = model.get_updated_funds_from_deltas(previous_funds, delta)
 
     assert math.isclose(previous_funds.rrsp_available_room + expected, funds.rrsp_available_room)
+
+
+def test_calculate_yearly_mortgage_payment():
+    principal = 100000
+    amortization = 25
+    interest = 0.05
+    # periodic_rate = (1 + 0.05/2)**(2/12) - 1 = 0.004123915
+    # total_payments = 300
+    # monthly = 100000 / ((1 - (1+periodic_rate)**-300) / periodic_rate) = 581.603
+    # yearly = 6979.236
+    expected_yearly_payment = 6979.236
+    payment = natural_rules.calculate_yearly_mortgage_payment(principal, amortization, interest)
+    assert math.isclose(expected_yearly_payment, payment, rel_tol=1e-5)
+
+
+def test_get_mortgage_payment():
+    principal = 100000
+    amortization = 25
+    interest = 0.05
+    initial_year = 2021
+
+    rule = natural_rules.get_mortgage_payment(principal, amortization, interest, initial_year)
+
+    # Within amortization period
+    delta = model.deltas_state.from_year(2021)
+    delta = rule(delta, None, None)
+    expected_yearly_payment = 6979.236
+    assert math.isclose(expected_yearly_payment, delta.debt_payments, rel_tol=1e-5)
+
+    # At the end of amortization period (2021 + 25 = 2046)
+    delta_end = model.deltas_state.from_year(2045)
+    delta_end = rule(delta_end, None, None)
+    assert math.isclose(expected_yearly_payment, delta_end.debt_payments, rel_tol=1e-5)
+
+    # After amortization period
+    delta_after = model.deltas_state.from_year(2046)
+    delta_after = rule(delta_after, None, None)
+    assert delta_after.debt_payments == 0
+
+
+def test_get_mortgage_payment_zero_interest():
+    principal = 100000
+    amortization = 25
+    interest = 0.0
+    initial_year = 2021
+
+    rule = natural_rules.get_mortgage_payment(principal, amortization, interest, initial_year)
+
+    delta = model.deltas_state.from_year(2021)
+    delta = rule(delta, None, None)
+
+    assert math.isclose(4000.0, delta.debt_payments)
+
+
+def test_get_mortgage_payment_zero_amortization():
+    with pytest.raises(ValueError, match="amortization_length must be greater than 0"):
+        natural_rules.get_mortgage_payment(100000, 0, 0.05, 2021)
