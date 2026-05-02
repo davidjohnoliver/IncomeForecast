@@ -170,3 +170,34 @@ def get_mortgage_payment(
         return deltas
 
     return mortgage_payment
+
+
+def get_couple_mortgage_payment(
+    remaining_principal: float,
+    initial_remaining_amortization_length: int,
+    mortgage_interest: float,
+    initial_year: int,
+):
+    """
+    Returns a couple rule which deducts mortgage repayments at the household level, over a period of amortization.
+    """
+
+    yearly_payment = calculate_yearly_mortgage_payment(
+        remaining_principal, initial_remaining_amortization_length, mortgage_interest
+    )
+
+    end_year = initial_year + initial_remaining_amortization_length
+
+    def mortgage_payment(
+        deltas: model.couple_deltas_state,
+        previous_funds: model.couple_funds_state,
+        previous_deltas: model.couple_deltas_state,
+    ):
+        if deltas.year < end_year:
+            output_deltas = deltas.update_household_debt_payments(
+                deltas.household_debt_payments + yearly_payment
+            )
+            return output_deltas
+        return deltas
+
+    return mortgage_payment
