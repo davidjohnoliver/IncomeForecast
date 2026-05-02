@@ -2,6 +2,7 @@ import ruleset
 import salary_rules
 import couple_savings_rules
 import couple_spending_rules
+import natural_rules
 from typing import Callable
 import solve
 
@@ -176,7 +177,19 @@ def _charlie_raw(
     tfsa_yearly_increase: float,
     rrsp_income_fraction: float,
     rrsp_annual_limit: float,
+    mortgage_principal: float,
+    mortgage_amortization: int,
+    mortgage_interest: float,
 ):
+
+    mortgage_payment_rule = None
+    if mortgage_principal > 0 and mortgage_amortization > 0:
+        mortgage_payment_rule = natural_rules.get_couple_mortgage_payment(
+            mortgage_principal,
+            mortgage_amortization,
+            mortgage_interest,
+            initial_year,
+        )
 
     ruleset_func = ruleset.get_couple_ruleset(
         salary_rules.get_compound_plateau(
@@ -205,6 +218,7 @@ def _charlie_raw(
         tfsa_yearly_increase,
         rrsp_income_fraction,
         rrsp_annual_limit,
+        mortgage_payment_rule=mortgage_payment_rule,
     )
 
     return ruleset_func
@@ -232,6 +246,9 @@ def charlie(
     rrsp_income_fraction: float,
     rrsp_annual_limit: float,
     optimize: solve.Optimizing_Solver,
+    mortgage_principal: float,
+    mortgage_amortization: int,
+    mortgage_interest: float,
 ):
     """
     A dual-income ruleset which uses the increasing_savings_increasing_spending rule for spending vs. saving, and the split_by_investment_then_partner_with_limits rule for savings allocations
@@ -277,4 +294,7 @@ def charlie(
         tfsa_yearly_increase,
         rrsp_income_fraction,
         rrsp_annual_limit,
+        mortgage_principal=mortgage_principal,
+        mortgage_amortization=mortgage_amortization,
+        mortgage_interest=mortgage_interest,
     )

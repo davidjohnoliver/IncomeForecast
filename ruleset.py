@@ -93,10 +93,14 @@ def get_couple_ruleset(
     tfsa_yearly_increase: float,
     rrsp_income_fraction: float,
     rrsp_annual_limit: float,
+    mortgage_payment_rule=None,
 ):
     def ruleset(
         current_year: int, is_partner1_retired: bool, is_partner2_retired: bool
     ):
+        if mortgage_payment_rule:
+            yield mortgage_payment_rule
+
         for i in range(1, 3):
             # These rules don't have dependencies and apply both pre- and post-retirement
             # (Tax 'refund' can have either sign and is actually a payment when deducting from the RRSP)
