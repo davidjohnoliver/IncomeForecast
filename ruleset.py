@@ -93,6 +93,8 @@ def get_couple_ruleset(
     tfsa_yearly_increase: float,
     rrsp_income_fraction: float,
     rrsp_annual_limit: float,
+    partner1_pretax_rules,
+    partner2_pretax_rules,
     mortgage_payment_rule=None,
 ):
     def ruleset(
@@ -129,10 +131,16 @@ def get_couple_ruleset(
         if not is_partner1_retired:
             yield model.get_couple_rule_from_single_rule(partner1_salary_rule, 1)
 
+        for partner1_pretax_rule in partner1_pretax_rules:
+            yield model.get_couple_rule_from_single_rule(partner1_pretax_rule, 1)
+
         yield model.get_couple_rule_from_single_rule(natural_rules.apply_tax, 1)
 
         if not is_partner2_retired:
             yield model.get_couple_rule_from_single_rule(partner2_salary_rule, 2)
+
+        for partner2_pretax_rule in partner2_pretax_rules:
+            yield model.get_couple_rule_from_single_rule(partner2_pretax_rule, 2)
 
         yield model.get_couple_rule_from_single_rule(natural_rules.apply_tax, 2)
 

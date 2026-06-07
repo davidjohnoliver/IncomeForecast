@@ -4,6 +4,7 @@ Covers 'natural' update rules, rules that are set by law, economics and/or mathe
 
 import model
 import tax
+import math_utils
 
 
 def apply_tax(
@@ -11,8 +12,10 @@ def apply_tax(
     previous_funds: model.funds_state,
     previous_deltas: model.deltas_state,
 ):
-    """Set income tax owed, *ignoring* RRSP contributions (since savings can only be calculated after the tax has been determined), but including income on unregistered investments."""
-    income_tax = tax.get_income_tax(deltas.gross_salary + deltas.unregistered_interest)
+    """Set income tax owed, *ignoring* RRSP contributions (since savings can only be calculated after the tax has been determined), but including benefits and income on unregistered investments."""
+    income_tax = tax.get_income_tax(
+        deltas.gross_salary + deltas.benefits + deltas.unregistered_interest
+    )
     return deltas.update_tax(income_tax)
 
 
@@ -101,6 +104,75 @@ def get_update_rrsp_limit(income_fraction: float, annual_limit: float):
         )
 
     return apply_update
+
+
+def get_quebec_pension_plan(
+    maximum_pensionable_earnings: float,
+    pension_contribution: float,
+    current_monthly_pension_at_60: float,
+    projected_monthly_pension_at_60: float,
+    current_monthly_pension_at_65: float,
+    projected_monthly_pension_at_65: float,
+    initial_year: int,
+    current_age: int,
+    retirement_age: int,
+    pension_start_age: int,
+):
+    """
+    Returns a rule which applies Quebec Pension Plan contributions before retirement and benefits once the pension has started.
+
+    The algorithm for determining benefits is as follows:
+ - lerp between current pension (ie pension if retiring right now) and projected pension (ie pension if retiring at pension start age) to get actualPensionAt60 and actualPensionAt65, based on retirementAge
+ - lerp between actualPensionAt60 and actualPensionAt65 to get actualPension, based on pensionStartAge
+    """
+
+    def get_projection_fraction(projected_age: int):
+        years_to_projected_age = projected_age - current_age
+        if years_to_projected_age <= 0:
+            return 1
+        return math_utils.clamp(
+            (retirement_age - current_age) / years_to_projected_age, 0, 1
+        )
+
+    actual_monthly_pension_at_60 = math_utils.lerp(
+        current_monthly_pension_at_60,
+        projected_monthly_pension_at_60,
+        get_projection_fraction(60),
+    )
+    actual_monthly_pension_at_65 = math_utils.lerp(
+        current_monthly_pension_at_65,
+        projected_monthly_pension_at_65,
+        get_projection_fraction(65),
+    )
+    pension_start_fraction = math_utils.clamp((pension_start_age - 60) / 5, 0, 1)
+    actual_yearly_pension = (
+        math_utils.lerp(
+            actual_monthly_pension_at_60,
+            actual_monthly_pension_at_65,
+            pension_start_fraction,
+        )
+        * 12
+    )
+    yearly_contribution = maximum_pensionable_earnings * pension_contribution
+
+    def apply_qpp(
+        deltas: model.deltas_state,
+        previous_funds: model.funds_state,
+        previous_deltas: model.deltas_state,
+    ):
+        output_deltas = deltas
+        age = current_age + deltas.year - initial_year
+        if age < retirement_age:
+            output_deltas = output_deltas.update_contributions(
+                output_deltas.contributions + yearly_contribution
+            )
+        if age >= pension_start_age:
+            output_deltas = output_deltas.update_benefits(
+                output_deltas.benefits + actual_yearly_pension
+            )
+        return output_deltas
+
+    return apply_qpp
 
 
 def calculate_yearly_mortgage_payment(

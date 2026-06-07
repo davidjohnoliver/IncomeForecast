@@ -22,22 +22,24 @@ def alice(
     """
 
     ruleset_func = ruleset.get_couple_ruleset(
-        salary_rules.get_compound_plateau(
+        partner1_salary_rule=salary_rules.get_compound_plateau(
             partner1_salary_compound_rate, partner1_salary_plateau
         ),
-        salary_rules.get_compound_plateau(
+        partner2_salary_rule=salary_rules.get_compound_plateau(
             partner2_salary_compound_rate, partner2_salary_plateau
         ),
-        couple_spending_rules.get_luxury_over_basic(
+        spending_rule=couple_spending_rules.get_luxury_over_basic(
             base_spending, spending_luxury_compound_rate
         ),
-        couple_savings_rules.get_equalizing_rrsp_only_split(),
-        rrsp_interest_rate,
-        tfsa_interest_rate,
-        0,  # Unregistered interest not supported
-        0.0, # TFSA and RRSP limits not supported
-        0.0,
-        0.0,
+        savings_rule=couple_savings_rules.get_equalizing_rrsp_only_split(),
+        rrsp_interest_rate=rrsp_interest_rate,
+        tfsa_interest_rate=tfsa_interest_rate,
+        unregistered_interest_rate=0,  # Unregistered interest not supported
+        tfsa_yearly_increase=0.0, # TFSA and RRSP limits not supported
+        rrsp_income_fraction=0.0,
+        rrsp_annual_limit=0.0,
+        partner1_pretax_rules=[],
+        partner2_pretax_rules=[],
     )
 
     return ruleset_func
@@ -63,16 +65,16 @@ def _bad_seed_raw(
 ):
 
     ruleset_func = ruleset.get_couple_ruleset(
-        salary_rules.get_compound_plateau(
+        partner1_salary_rule=salary_rules.get_compound_plateau(
             partner1_salary_compound_rate, partner1_salary_plateau
         ),
-        salary_rules.get_compound_plateau(
+        partner2_salary_rule=salary_rules.get_compound_plateau(
             partner2_salary_compound_rate, partner2_salary_plateau
         ),
-        couple_spending_rules.get_increasing_savings_increasing_spending(
+        spending_rule=couple_spending_rules.get_increasing_savings_increasing_spending(
             initial_year, increase_savings_weight
         ),
-        couple_savings_rules.get_split_by_investment_then_partner(
+        savings_rule=couple_savings_rules.get_split_by_investment_then_partner(
             initial_tfsa_func,
             final_tfsa_func,
             initial_equalize_income_weighting_func,
@@ -83,12 +85,14 @@ def _bad_seed_raw(
             final_year,
             rrsp_adjustment_func,
         ),
-        rrsp_interest_rate,
-        tfsa_interest_rate,
-        0,  # Unregistered interest not supported
-        0.0, # TFSA and RRSP limits not supported
-        0.0,
-        0.0,
+        rrsp_interest_rate=rrsp_interest_rate,
+        tfsa_interest_rate=tfsa_interest_rate,
+        unregistered_interest_rate=0,  # Unregistered interest not supported
+        tfsa_yearly_increase=0.0, # TFSA and RRSP limits not supported
+        rrsp_income_fraction=0.0,
+        rrsp_annual_limit=0.0,
+        partner1_pretax_rules=[],
+        partner2_pretax_rules=[],
     )
 
     return ruleset_func
@@ -180,28 +184,69 @@ def _charlie_raw(
     mortgage_principal: float,
     mortgage_amortization: int,
     mortgage_interest: float,
+    qpp_maximum_pensionable_earnings: float,
+    qpp_pension_contribution: float,
+    partner1_current_monthly_pension_at_60: float,
+    partner1_projected_monthly_pension_at_60: float,
+    partner1_current_monthly_pension_at_65: float,
+    partner1_projected_monthly_pension_at_65: float,
+    partner1_retirement_age: int,
+    partner1_pension_start_age: int,
+    partner2_current_monthly_pension_at_60: float,
+    partner2_projected_monthly_pension_at_60: float,
+    partner2_current_monthly_pension_at_65: float,
+    partner2_projected_monthly_pension_at_65: float,
+    partner2_retirement_age: int,
+    partner2_pension_start_age: int,
 ):
 
     mortgage_payment_rule = None
     if mortgage_principal > 0 and mortgage_amortization > 0:
         mortgage_payment_rule = natural_rules.get_couple_mortgage_payment(
-            mortgage_principal,
-            mortgage_amortization,
-            mortgage_interest,
-            initial_year,
+            remaining_principal=mortgage_principal,
+            initial_remaining_amortization_length=mortgage_amortization,
+            mortgage_interest=mortgage_interest,
+            initial_year=initial_year,
         )
 
+    partner1_qpp_rule = natural_rules.get_quebec_pension_plan(
+        maximum_pensionable_earnings=qpp_maximum_pensionable_earnings,
+        pension_contribution=qpp_pension_contribution,
+        current_monthly_pension_at_60=partner1_current_monthly_pension_at_60,
+        projected_monthly_pension_at_60=partner1_projected_monthly_pension_at_60,
+        current_monthly_pension_at_65=partner1_current_monthly_pension_at_65,
+        projected_monthly_pension_at_65=partner1_projected_monthly_pension_at_65,
+        initial_year=initial_year,
+        current_age=partner1_retirement_age
+        - (partner1_year_of_retirement - initial_year),
+        retirement_age=partner1_retirement_age,
+        pension_start_age=partner1_pension_start_age,
+    )
+    partner2_qpp_rule = natural_rules.get_quebec_pension_plan(
+        maximum_pensionable_earnings=qpp_maximum_pensionable_earnings,
+        pension_contribution=qpp_pension_contribution,
+        current_monthly_pension_at_60=partner2_current_monthly_pension_at_60,
+        projected_monthly_pension_at_60=partner2_projected_monthly_pension_at_60,
+        current_monthly_pension_at_65=partner2_current_monthly_pension_at_65,
+        projected_monthly_pension_at_65=partner2_projected_monthly_pension_at_65,
+        initial_year=initial_year,
+        current_age=partner2_retirement_age
+        - (partner2_year_of_retirement - initial_year),
+        retirement_age=partner2_retirement_age,
+        pension_start_age=partner2_pension_start_age,
+    )
+
     ruleset_func = ruleset.get_couple_ruleset(
-        salary_rules.get_compound_plateau(
+        partner1_salary_rule=salary_rules.get_compound_plateau(
             partner1_salary_compound_rate, partner1_salary_plateau
         ),
-        salary_rules.get_compound_plateau(
+        partner2_salary_rule=salary_rules.get_compound_plateau(
             partner2_salary_compound_rate, partner2_salary_plateau
         ),
-        couple_spending_rules.get_increasing_savings_increasing_spending(
+        spending_rule=couple_spending_rules.get_increasing_savings_increasing_spending(
             initial_year, increase_savings_weight
         ),
-        couple_savings_rules.get_split_by_investment_then_partner_with_limits(
+        savings_rule=couple_savings_rules.get_split_by_investment_then_partner_with_limits(
             initial_non_rrsp_func,
             final_non_rrsp_func,
             initial_equalize_income_weighting_func,
@@ -212,12 +257,14 @@ def _charlie_raw(
             final_year,
             rrsp_adjustment_func,
         ),
-        rrsp_interest_rate,
-        tfsa_interest_rate,
-        unregistered_interest_rate,
-        tfsa_yearly_increase,
-        rrsp_income_fraction,
-        rrsp_annual_limit,
+        rrsp_interest_rate=rrsp_interest_rate,
+        tfsa_interest_rate=tfsa_interest_rate,
+        unregistered_interest_rate=unregistered_interest_rate,
+        tfsa_yearly_increase=tfsa_yearly_increase,
+        rrsp_income_fraction=rrsp_income_fraction,
+        rrsp_annual_limit=rrsp_annual_limit,
+        partner1_pretax_rules=[partner1_qpp_rule],
+        partner2_pretax_rules=[partner2_qpp_rule],
         mortgage_payment_rule=mortgage_payment_rule,
     )
 
@@ -249,6 +296,20 @@ def charlie(
     mortgage_principal: float,
     mortgage_amortization: int,
     mortgage_interest: float,
+    qpp_maximum_pensionable_earnings: float,
+    qpp_pension_contribution: float,
+    partner1_current_monthly_pension_at_60: float,
+    partner1_projected_monthly_pension_at_60: float,
+    partner1_current_monthly_pension_at_65: float,
+    partner1_projected_monthly_pension_at_65: float,
+    partner1_retirement_age: int,
+    partner1_pension_start_age: int,
+    partner2_current_monthly_pension_at_60: float,
+    partner2_projected_monthly_pension_at_60: float,
+    partner2_current_monthly_pension_at_65: float,
+    partner2_projected_monthly_pension_at_65: float,
+    partner2_retirement_age: int,
+    partner2_pension_start_age: int,
 ):
     """
     A dual-income ruleset which uses the increasing_savings_increasing_spending rule for spending vs. saving, and the split_by_investment_then_partner_with_limits rule for savings allocations
@@ -274,27 +335,41 @@ def charlie(
     )
 
     return _charlie_raw(
-        partner1_salary_compound_rate,
-        partner1_salary_plateau,
-        partner2_salary_compound_rate,
-        partner2_salary_plateau,
-        initial_year,
-        increase_savings_weight,
-        initial_non_rrsp_func,
-        final_non_rrsp_func,
-        initial_equalize_income_weighting_func,
-        final_equalize_income_weighting_func,
-        partner1_year_of_retirement,
-        partner2_year_of_retirement,
-        final_year,
-        rrsp_adjustment_func,
-        rrsp_interest_rate,
-        tfsa_interest_rate,
-        unregistered_interest_rate,
-        tfsa_yearly_increase,
-        rrsp_income_fraction,
-        rrsp_annual_limit,
+        partner1_salary_compound_rate=partner1_salary_compound_rate,
+        partner1_salary_plateau=partner1_salary_plateau,
+        partner2_salary_compound_rate=partner2_salary_compound_rate,
+        partner2_salary_plateau=partner2_salary_plateau,
+        initial_year=initial_year,
+        increase_savings_weight=increase_savings_weight,
+        initial_non_rrsp_func=initial_non_rrsp_func,
+        final_non_rrsp_func=final_non_rrsp_func,
+        initial_equalize_income_weighting_func=initial_equalize_income_weighting_func,
+        final_equalize_income_weighting_func=final_equalize_income_weighting_func,
+        partner1_year_of_retirement=partner1_year_of_retirement,
+        partner2_year_of_retirement=partner2_year_of_retirement,
+        final_year=final_year,
+        rrsp_adjustment_func=rrsp_adjustment_func,
+        rrsp_interest_rate=rrsp_interest_rate,
+        tfsa_interest_rate=tfsa_interest_rate,
+        unregistered_interest_rate=unregistered_interest_rate,
+        tfsa_yearly_increase=tfsa_yearly_increase,
+        rrsp_income_fraction=rrsp_income_fraction,
+        rrsp_annual_limit=rrsp_annual_limit,
         mortgage_principal=mortgage_principal,
         mortgage_amortization=mortgage_amortization,
         mortgage_interest=mortgage_interest,
+        qpp_maximum_pensionable_earnings=qpp_maximum_pensionable_earnings,
+        qpp_pension_contribution=qpp_pension_contribution,
+        partner1_current_monthly_pension_at_60=partner1_current_monthly_pension_at_60,
+        partner1_projected_monthly_pension_at_60=partner1_projected_monthly_pension_at_60,
+        partner1_current_monthly_pension_at_65=partner1_current_monthly_pension_at_65,
+        partner1_projected_monthly_pension_at_65=partner1_projected_monthly_pension_at_65,
+        partner1_retirement_age=partner1_retirement_age,
+        partner1_pension_start_age=partner1_pension_start_age,
+        partner2_current_monthly_pension_at_60=partner2_current_monthly_pension_at_60,
+        partner2_projected_monthly_pension_at_60=partner2_projected_monthly_pension_at_60,
+        partner2_current_monthly_pension_at_65=partner2_current_monthly_pension_at_65,
+        partner2_projected_monthly_pension_at_65=partner2_projected_monthly_pension_at_65,
+        partner2_retirement_age=partner2_retirement_age,
+        partner2_pension_start_age=partner2_pension_start_age,
     )

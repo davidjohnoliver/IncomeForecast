@@ -1,6 +1,7 @@
 import sim
 import couple_rulesets
 import solve
+import math
 
 
 def test_alice_runs():
@@ -157,7 +158,21 @@ def test_charlie_runs():
             optimize,
             0,
             0,
-            0
+            0,
+            qpp_maximum_pensionable_earnings=68400,
+            qpp_pension_contribution=0.07,
+            partner1_current_monthly_pension_at_60=320,
+            partner1_projected_monthly_pension_at_60=930,
+            partner1_current_monthly_pension_at_65=415,
+            partner1_projected_monthly_pension_at_65=1510,
+            partner1_retirement_age=simulation.partner1_parameters.age_at_retirement,
+            partner1_pension_start_age=60,
+            partner2_current_monthly_pension_at_60=320,
+            partner2_projected_monthly_pension_at_60=930,
+            partner2_current_monthly_pension_at_65=415,
+            partner2_projected_monthly_pension_at_65=1510,
+            partner2_retirement_age=simulation.partner2_parameters.age_at_retirement,
+            partner2_pension_start_age=65,
         )
     )
 
@@ -165,6 +180,8 @@ def test_charlie_runs():
 
     assert 46 == len(simulation.all_deltas)
     assert 46 == len(simulation.all_funds)
+    assert math.isclose(4788, simulation.all_deltas[1].partner1_deltas.contributions)
+    assert math.isclose(11160, simulation.all_deltas[25].partner1_deltas.benefits)
 
 
 def test_charlie_with_mortgage_runs():
@@ -224,6 +241,20 @@ def test_charlie_with_mortgage_runs():
             mortgage_principal=300000,
             mortgage_amortization=25,
             mortgage_interest=0.04,
+            qpp_maximum_pensionable_earnings=68400,
+            qpp_pension_contribution=0.07,
+            partner1_current_monthly_pension_at_60=320,
+            partner1_projected_monthly_pension_at_60=930,
+            partner1_current_monthly_pension_at_65=415,
+            partner1_projected_monthly_pension_at_65=1510,
+            partner1_retirement_age=simulation.partner1_parameters.age_at_retirement,
+            partner1_pension_start_age=60,
+            partner2_current_monthly_pension_at_60=320,
+            partner2_projected_monthly_pension_at_60=930,
+            partner2_current_monthly_pension_at_65=415,
+            partner2_projected_monthly_pension_at_65=1510,
+            partner2_retirement_age=simulation.partner2_parameters.age_at_retirement,
+            partner2_pension_start_age=65,
         )
     )
 

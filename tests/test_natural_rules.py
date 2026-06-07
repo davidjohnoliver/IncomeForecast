@@ -200,6 +200,56 @@ def test_update_rrsp_available_room(gross, income_fraction, annual_limit, expect
     assert math.isclose(previous_funds.rrsp_available_room + expected, funds.rrsp_available_room)
 
 
+def test_get_quebec_pension_plan_contributes_before_retirement():
+    rule = natural_rules.get_quebec_pension_plan(
+        maximum_pensionable_earnings=68400,
+        pension_contribution=0.07,
+        current_monthly_pension_at_60=320,
+        projected_monthly_pension_at_60=930,
+        current_monthly_pension_at_65=415,
+        projected_monthly_pension_at_65=1510,
+        initial_year=2025,
+        current_age=50,
+        retirement_age=62,
+        pension_start_age=63,
+    )
+
+    delta = model.deltas_state.from_year(2026)
+    delta = delta.update_contributions(100)
+    delta = rule(delta, None, None)
+
+    assert math.isclose(4888, delta.contributions)
+    assert 0 == delta.benefits
+
+
+def test_get_quebec_pension_plan_pays_benefit_from_pension_start_age():
+    rule = natural_rules.get_quebec_pension_plan(
+        maximum_pensionable_earnings=68400,
+        pension_contribution=0.07,
+        current_monthly_pension_at_60=320,
+        projected_monthly_pension_at_60=930,
+        current_monthly_pension_at_65=415,
+        projected_monthly_pension_at_65=1510,
+        initial_year=2025,
+        current_age=50,
+        retirement_age=62,
+        pension_start_age=63,
+    )
+
+    delta = model.deltas_state.from_year(2038)
+    delta = delta.update_benefits(200)
+    delta = rule(delta, None, None)
+
+    actual_monthly_pension_at_60 = 930
+    actual_monthly_pension_at_65 = 415 + (1510 - 415) * 0.8
+    expected_monthly_pension = actual_monthly_pension_at_60 + (
+        actual_monthly_pension_at_65 - actual_monthly_pension_at_60
+    ) * 0.6
+
+    assert 0 == delta.contributions
+    assert math.isclose(200 + expected_monthly_pension * 12, delta.benefits)
+
+
 def test_calculate_yearly_mortgage_payment():
     principal = 100000
     amortization = 25
