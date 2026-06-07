@@ -53,6 +53,17 @@ partner1.salary_plateau = set.this.value
 ### By what rate do you predict your salary to increase per year, on average, up to its peak? (Eg, if you expect it to increase by 5% each year, put 'salary_compound_rate=0.05')
 partner1.salary_compound_rate = set.this.value
 
+### If you started your Quebec Pension Plan pension at age 60 now, what would your current monthly pension be?
+partner1.current_monthly_pension_at_60 = set.this.value
+### If you continued contributing at current levels and started your Quebec Pension Plan pension at age 60, what would your projected monthly pension be?
+partner1.projected_monthly_pension_at_60 = set.this.value
+### If you started your Quebec Pension Plan pension at age 65 now, what would your current monthly pension be?
+partner1.current_monthly_pension_at_65 = set.this.value
+### If you continued contributing at current levels and started your Quebec Pension Plan pension at age 65, what would your projected monthly pension be?
+partner1.projected_monthly_pension_at_65 = set.this.value
+### When will simulated-you start receiving Quebec Pension Plan payments?
+partner1.pension_start_age = set.this.value
+
 ## Fill in details for the second person in the couple:
 ## Given name?
 partner2.name = "Partner 2"
@@ -80,6 +91,17 @@ partner2.salary_plateau = set.this.value
 ### By what rate do you predict your salary to increase per year, on average, up to its peak? (Eg, if you expect it to increase by 5% each year, put 'salary_compound_rate=0.05')
 partner2.salary_compound_rate = set.this.value
 
+### If you started your Quebec Pension Plan pension at age 60 now, what would your current monthly pension be?
+partner2.current_monthly_pension_at_60 = set.this.value
+### If you continued contributing at current levels and started your Quebec Pension Plan pension at age 60, what would your projected monthly pension be?
+partner2.projected_monthly_pension_at_60 = set.this.value
+### If you started your Quebec Pension Plan pension at age 65 now, what would your current monthly pension be?
+partner2.current_monthly_pension_at_65 = set.this.value
+### If you continued contributing at current levels and started your Quebec Pension Plan pension at age 65, what would your projected monthly pension be?
+partner2.projected_monthly_pension_at_65 = set.this.value
+### When will simulated-you start receiving Quebec Pension Plan payments?
+partner2.pension_start_age = set.this.value
+
 ## Fill in additional details:
 ### In what year is the simulation starting? (Typically the current year)
 simulation.initial_year = set.this.value
@@ -89,6 +111,27 @@ simulation.final_savings = 0
 
 ### How much interest do your invested savings earn? This depends on your investments, which in turn depends on your risk tolerance, time horizon, etc. (If your interests have an annual return of, eg, 6%, put 'interest_rate = 0.06') Note: this should be in real terms, ignoring inflation.
 interest_rate = 0.05
+### How much interest do taxable/unregistered investments earn?
+unregistered_interest_rate = interest_rate
+
+### How much new TFSA contribution room is added each year?
+tfsa_yearly_increase = set.this.value
+### What fraction of earned income becomes new RRSP contribution room?
+rrsp_income_fraction = 0.18
+### What is the annual RRSP contribution room limit?
+rrsp_annual_limit = set.this.value
+
+### What is the maximum pensionable earnings amount for Quebec Pension Plan contributions?
+qpp_maximum_pensionable_earnings = set.this.value
+### What fraction of maximum pensionable earnings should be deducted for Quebec Pension Plan contributions?
+qpp_pension_contribution = set.this.value
+
+### If you have a mortgage, what is the remaining principal?
+mortgage_principal = set.this.value
+### If you have a mortgage, how many years are left in the amortization?
+mortgage_amortization = set.this.value
+### If you have a mortgage, what is the interest rate?
+mortgage_interest = set.this.value
 
 ### How should the simulation try to distribute your contributions to retirement saving? The higher the value of increase_savings_weight, the more of any increase in salary will be put towards increased saving; the lower the value, the more of any increase in salary will be put towards immediate increased spending instead. Either way, the simulation will find an overall spending vs. savings balance that will allow you to maintain a steady income in retirement; the effect of this parameter is to determine when the bulk of savings occur. A high increase_savings_weight will 'back-load' savings, giving a higher spending early, but with less increase in spending over time; whereas a low increase_savings_weight will 'front-load' savings, giving a lower spending earlier on, but a more significant increase over time.
 increase_savings_weight = 0.5
@@ -97,9 +140,9 @@ increase_savings_weight = 0.5
 should_optimize = False
 
 ## Some final parameters to tweak, for the adventurous. If should_optimize = True, the simulation will search for optimum values for these parameters, using the provided values as initial guesses.
-### The proportion of savings to be put in the TFSA. initial_tfsa is used in the first year, final_tfsa is used in the last year of working before retirement, and intermediate values scale linearly between the two.
-initial_tfsa = 0.5
-final_tfsa = 0.5
+### The proportion of savings to be put outside RRSPs. initial_non_rrsp is used in the first year, final_non_rrsp is used in the last year of working before retirement, and intermediate values scale linearly between the two.
+initial_non_rrsp = 0.5
+final_non_rrsp = 0.5
 ### The equalize_income_weighting parameter is used to determine how to distribute RRSP contributions between partners with unequal salaries. A high parameter value maximises the contribution of the higher-earning couple, to minimize marginal tax right now; a low parameter value spreads the contribution evenly, to minimize marginal tax later when withdrawing from the RRSP. Again, it scales linearly during the simulation from the initial value in the first year to the final value in the last year.
 initial_equalize_income_weighting = 0.5
 final_equalize_income_weighting = 0.5
@@ -116,24 +159,45 @@ optimize = solve.Optimizing_Solver(solve.binary_solver, should_invert=True)
 optimize.is_optimization_disabled = not should_optimize
 simulation.set_solver(optimize.solve)
 
-ruleset = couple_rulesets.bad_seed(
-    partner1.salary_compound_rate,
-    partner1.salary_plateau,
-    partner2.salary_compound_rate,
-    partner2.salary_plateau,
-    simulation.initial_year,
-    increase_savings_weight,
-    initial_tfsa,
-    final_tfsa,
-    initial_equalize_income_weighting,
-    final_equalize_income_weighting,
-    partner1.year_of_retirement,
-    partner2.year_of_retirement,
-    simulation.final_year,
-    rrsp_adjustment,
-    interest_rate,
-    interest_rate,
-    optimize,
+ruleset = couple_rulesets.charlie(
+    partner1_salary_compound_rate=partner1.salary_compound_rate,
+    partner1_salary_plateau=partner1.salary_plateau,
+    partner2_salary_compound_rate=partner2.salary_compound_rate,
+    partner2_salary_plateau=partner2.salary_plateau,
+    initial_year=simulation.initial_year,
+    increase_savings_weight=increase_savings_weight,
+    initial_non_rrsp_guess=initial_non_rrsp,
+    final_non_rrsp_guess=final_non_rrsp,
+    initial_equalize_income_weighting_guess=initial_equalize_income_weighting,
+    final_equalize_income_weighting_guess=final_equalize_income_weighting,
+    partner1_year_of_retirement=partner1.year_of_retirement,
+    partner2_year_of_retirement=partner2.year_of_retirement,
+    final_year=simulation.final_year,
+    rrsp_adjustment_guess=rrsp_adjustment,
+    rrsp_interest_rate=interest_rate,
+    tfsa_interest_rate=interest_rate,
+    unregistered_interest_rate=unregistered_interest_rate,
+    tfsa_yearly_increase=tfsa_yearly_increase,
+    rrsp_income_fraction=rrsp_income_fraction,
+    rrsp_annual_limit=rrsp_annual_limit,
+    optimize=optimize,
+    mortgage_principal=mortgage_principal,
+    mortgage_amortization=mortgage_amortization,
+    mortgage_interest=mortgage_interest,
+    qpp_maximum_pensionable_earnings=qpp_maximum_pensionable_earnings,
+    qpp_pension_contribution=qpp_pension_contribution,
+    partner1_current_monthly_pension_at_60=partner1.current_monthly_pension_at_60,
+    partner1_projected_monthly_pension_at_60=partner1.projected_monthly_pension_at_60,
+    partner1_current_monthly_pension_at_65=partner1.current_monthly_pension_at_65,
+    partner1_projected_monthly_pension_at_65=partner1.projected_monthly_pension_at_65,
+    partner1_retirement_age=partner1.age_at_retirement,
+    partner1_pension_start_age=partner1.pension_start_age,
+    partner2_current_monthly_pension_at_60=partner2.current_monthly_pension_at_60,
+    partner2_projected_monthly_pension_at_60=partner2.projected_monthly_pension_at_60,
+    partner2_current_monthly_pension_at_65=partner2.current_monthly_pension_at_65,
+    partner2_projected_monthly_pension_at_65=partner2.projected_monthly_pension_at_65,
+    partner2_retirement_age=partner2.age_at_retirement,
+    partner2_pension_start_age=partner2.pension_start_age,
 )
 
 simulation.set_ruleset(ruleset)
