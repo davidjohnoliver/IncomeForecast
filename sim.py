@@ -256,6 +256,8 @@ class Simulation_Run:
         initial_deltas_state = model.deltas_state(
             year=initial_year,
             gross_salary=self._parent.initial_salary,
+            contributions=0,
+            benefits=0,
             tax=0,
             rrsp=0,
             tfsa=0,
@@ -586,6 +588,8 @@ class Dual_Income_Simulation_Run:
         initial_deltas_state = model.deltas_state(
             year=self._parent.initial_year,
             gross_salary=partner_params.initial_salary,
+            contributions=0,
+            benefits=0,
             tax=0,
             rrsp=0,
             tfsa=0,
@@ -625,10 +629,10 @@ class Dual_Income_Simulation_Run:
         )
 
         initial_deltas_state = model.couple_deltas_state(
-            self._get_initial_deltas_state_from_params(partner1_params),
-            self._get_initial_deltas_state_from_params(partner2_params),
-            self._initial_spending,
-            0,
+            partner1_deltas=self._get_initial_deltas_state_from_params(partner1_params),
+            partner2_deltas=self._get_initial_deltas_state_from_params(partner2_params),
+            household_spending=self._initial_spending,
+            household_debt_payments=0,
         )
 
         previous_deltas = initial_deltas_state

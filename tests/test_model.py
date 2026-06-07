@@ -4,14 +4,42 @@ import model
 def test_calculated_delta_values():
     deltas = model.deltas_state.from_year(1999)
     deltas = deltas.update_gross_salary(30000)
+    deltas = deltas.update_benefits(3000)
     deltas = deltas.update_tax(19000)
     deltas = deltas.update_tax_refund(700)
     deltas = deltas.update_spending(60)
-    assert 11700 == deltas.total_net_income
-    assert 11640 == deltas.undifferentiated_savings
+    deltas = deltas.update_contributions(1000)
+    assert 14700 == deltas.total_net_income
+    assert 33000 == deltas.taxable_income
+    assert 13640 == deltas.undifferentiated_savings
 
     deltas = deltas.update_debt_payments(500)
-    assert 11140 == deltas.undifferentiated_savings
+    assert 13140 == deltas.undifferentiated_savings
+
+
+def test_couple_calculated_delta_values():
+    partner1_deltas = model.deltas_state.from_year(1999)
+    partner1_deltas = partner1_deltas.update_gross_salary(30000)
+    partner1_deltas = partner1_deltas.update_contributions(700)
+    partner2_deltas = model.deltas_state.from_year(1999)
+    partner2_deltas = partner2_deltas.update_gross_salary(20000)
+    partner2_deltas = partner2_deltas.update_contributions(1300)
+
+    deltas = model.couple_deltas_state(
+        partner1_deltas=partner1_deltas,
+        partner2_deltas=partner2_deltas,
+        household_spending=30000,
+        household_debt_payments=1000,
+    )
+
+    assert 50000 == deltas.household_total_net_income
+    assert 2000 == deltas.household_contributions
+    assert 17000 == deltas.household_undifferentiated_savings
+
+    updated_partner2_deltas = deltas.partner2_deltas.update_contributions(4300)
+    deltas = deltas.update_partner2_deltas(updated_partner2_deltas)
+    assert 5000 == deltas.household_contributions
+    assert 14000 == deltas.household_undifferentiated_savings
 
 
 def test_get_updated_funds_from_deltas():

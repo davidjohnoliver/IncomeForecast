@@ -104,13 +104,15 @@ class couple_funds_state:
 
 
 class deltas_state:
-    """Records deltas for a given year, including pre-tax salary, income tax, RRSP contribution, TFSA contribution, and spending. Immutable,
+    """Records deltas for a given year, including pre-tax salary, benefits, income tax, RRSP contribution, TFSA contribution, and spending. Immutable,
     call update_x() to create a mutated value with modified x."""
 
     def __init__(
         self,
         year: int,
         gross_salary: float,
+        contributions: float,
+        benefits: float,
         tax: float,
         rrsp: float,
         tfsa: float,
@@ -126,6 +128,8 @@ class deltas_state:
     ):
         self._year = year
         self._gross_salary = gross_salary
+        self._contributions = contributions
+        self._benefits = benefits
         self._tax = tax
         self._rrsp = rrsp
         self._tfsa = tfsa
@@ -141,24 +145,43 @@ class deltas_state:
 
     @classmethod
     def from_year(cls, year: int):
-        return deltas_state(year, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+        return deltas_state(
+            year=year,
+            gross_salary=0,
+            contributions=0,
+            benefits=0,
+            tax=0,
+            rrsp=0,
+            tfsa=0,
+            spending=0,
+            rrsp_interest=0,
+            tfsa_interest=0,
+            unregistered=0,
+            unregistered_interest=0,
+            tax_refund=0,
+            tfsa_available_room=0,
+            rrsp_available_room=0,
+            debt_payments=0,
+        )
 
     def _copy(self):
         output = deltas_state(
-            self.year,
-            self.gross_salary,
-            self.tax,
-            self.rrsp,
-            self.tfsa,
-            self.spending,
-            self.rrsp_interest,
-            self.tfsa_interest,
-            self._unregistered,
-            self._unregistered_interest,
-            self._tax_refund,
-            self._tfsa_available_room,
-            self._rrsp_available_room,
-            self.debt_payments,
+            year=self.year,
+            gross_salary=self.gross_salary,
+            contributions=self.contributions,
+            benefits=self.benefits,
+            tax=self.tax,
+            rrsp=self.rrsp,
+            tfsa=self.tfsa,
+            spending=self.spending,
+            rrsp_interest=self.rrsp_interest,
+            tfsa_interest=self.tfsa_interest,
+            unregistered=self._unregistered,
+            unregistered_interest=self._unregistered_interest,
+            tax_refund=self._tax_refund,
+            tfsa_available_room=self._tfsa_available_room,
+            rrsp_available_room=self._rrsp_available_room,
+            debt_payments=self.debt_payments,
         )
         return output
 
@@ -181,6 +204,26 @@ class deltas_state:
     def update_gross_salary(self, new_value: float):
         output = self._copy()
         output._gross_salary = new_value
+        return output
+
+    @property
+    def contributions(self):
+        """Pension and other contributions."""
+        return self._contributions
+
+    def update_contributions(self, new_value: float):
+        output = self._copy()
+        output._contributions = new_value
+        return output
+
+    @property
+    def benefits(self):
+        """Pension payments and other government benefits."""
+        return self._benefits
+
+    def update_benefits(self, new_value: float):
+        output = self._copy()
+        output._benefits = new_value
         return output
 
     @property
@@ -308,17 +351,22 @@ class deltas_state:
     @property
     def total_net_income(self):
         """Salary plus tax refund (from last year) minus tax owed. Note that tax refund may be negative (if tax was paid on RRSP withdrawal)"""
-        return self.gross_salary + self.tax_refund - self.tax
+        return self.gross_salary + self.benefits + self.tax_refund - self.tax
 
     @property
     def taxable_income(self):
         """Taxable portion of salary, ie less the RRSP contribution (or mas the withdrawal)."""
-        return self.gross_salary + self.unregistered_interest - self.rrsp
+        return self.gross_salary + self.benefits + self.unregistered_interest - self.rrsp
 
     @property
     def undifferentiated_savings(self):
         """Total savings available to be split between RRSP and TFSA."""
-        return self.total_net_income - self.spending - self.debt_payments
+        return (
+            self.total_net_income
+            - self.spending
+            - self.debt_payments
+            - self.contributions
+        )
 
 
 class couple_deltas_state:
@@ -340,15 +388,18 @@ class couple_deltas_state:
     @classmethod
     def from_year(cls, year: int):
         return couple_deltas_state(
-            deltas_state.from_year(year), deltas_state.from_year(year), 0, 0
+            partner1_deltas=deltas_state.from_year(year),
+            partner2_deltas=deltas_state.from_year(year),
+            household_spending=0,
+            household_debt_payments=0,
         )
 
     def copy(self):
         output = couple_deltas_state(
-            self._partner1_deltas,
-            self._partner2_deltas,
-            self._household_spending,
-            self._household_debt_payments,
+            partner1_deltas=self._partner1_deltas,
+            partner2_deltas=self._partner2_deltas,
+            household_spending=self._household_spending,
+            household_debt_payments=self._household_debt_payments,
         )
         return output
 
@@ -386,6 +437,11 @@ class couple_deltas_state:
         return output
 
     @property
+    def household_contributions(self):
+        """Household-level total for pension and other contributions."""
+        return self.partner1_deltas.contributions + self.partner2_deltas.contributions
+
+    @property
     def household_debt_payments(self):
         """Payments of outstanding debt. This currently doesn't correspond to any funds_state value."""
         return self._household_debt_payments
@@ -408,6 +464,7 @@ class couple_deltas_state:
         return (
             self.household_total_net_income
             - self.household_spending
+            - self.household_contributions
             - self.household_debt_payments
         )
 
