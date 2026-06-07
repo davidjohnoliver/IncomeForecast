@@ -2,7 +2,7 @@
 
 ## Imports
 import math
-from IPython.core.display import display
+from IPython.display import display
 import sim
 import solve
 import couple_rulesets
@@ -24,6 +24,8 @@ partner2 = simulation.partner2_parameters
 
 # Configuration
 
+shared_retirement_age = set.this.value
+
 ## Fill in details for the first person in the couple:
 ## Given name?
 partner1.name = "Partner 1"
@@ -32,7 +34,7 @@ partner1.name = "Partner 1"
 partner1.year_of_birth = set.this.value
 
 ### When will simulated-you retire?
-partner1.age_at_retirement = set.this.value
+partner1.age_at_retirement = shared_retirement_age
 ### Good news: the sooner you die, the less money you need to save!
 partner1.age_at_death = set.this.value
 
@@ -41,6 +43,10 @@ partner1.initial_salary = set.this.value
 ### What savings do you currently have?
 partner1.initial_savings_rrsp = set.this.value
 partner1.initial_savings_tfsa = set.this.value
+partner1.initial_savings_unregistered = set.this.value
+### Registered account limits
+partner1.initial_rrsp_limit = set.this.value
+partner1.initial_tfsa_limit = set.this.value
 
 ### Where do you predict your salary will eventually peak at? (In the simulation, it will plateau at this value.)
 partner1.salary_plateau = set.this.value
@@ -55,7 +61,7 @@ partner2.name = "Partner 2"
 partner2.year_of_birth = set.this.value
 
 ### When will simulated-you retire?
-partner2.age_at_retirement = set.this.value
+partner2.age_at_retirement = shared_retirement_age
 ### Good news: the sooner you die, the less money you need to save!
 partner2.age_at_death = set.this.value
 
@@ -64,6 +70,10 @@ partner2.initial_salary = set.this.value
 ### What savings do you currently have?
 partner2.initial_savings_rrsp = set.this.value
 partner2.initial_savings_tfsa = set.this.value
+partner2.initial_savings_unregistered = set.this.value
+### Registered account limits
+partner2.initial_rrsp_limit = set.this.value
+partner2.initial_tfsa_limit = set.this.value
 
 ### Where do you predict your salary will eventually peak at? (In the simulation, it will plateau at this value.)
 partner2.salary_plateau = set.this.value
@@ -77,8 +87,8 @@ simulation.initial_year = set.this.value
 ### How much money should be left over at the end? (What do you want your beneficiaries to inherit?)
 simulation.final_savings = 0
 
-### How much interest do your invested savings earn? This depends on your investments, which in turn depends on your risk tolerance, time horizon, etc. (If your interests have an annual return of, eg, 6%, put 'interest_rate = 0.06')
-interest_rate = 0.08
+### How much interest do your invested savings earn? This depends on your investments, which in turn depends on your risk tolerance, time horizon, etc. (If your interests have an annual return of, eg, 6%, put 'interest_rate = 0.06') Note: this should be in real terms, ignoring inflation.
+interest_rate = 0.05
 
 ### How should the simulation try to distribute your contributions to retirement saving? The higher the value of increase_savings_weight, the more of any increase in salary will be put towards increased saving; the lower the value, the more of any increase in salary will be put towards immediate increased spending instead. Either way, the simulation will find an overall spending vs. savings balance that will allow you to maintain a steady income in retirement; the effect of this parameter is to determine when the bulk of savings occur. A high increase_savings_weight will 'back-load' savings, giving a higher spending early, but with less increase in spending over time; whereas a low increase_savings_weight will 'front-load' savings, giving a lower spending earlier on, but a more significant increase over time.
 increase_savings_weight = 0.5
@@ -160,7 +170,7 @@ def perc(raw: float):
 
 
 ## Info table
-info_table = display_utils.table("Simulation details", "")
+info_table = display_utils.table("Simulation details", "-")
 info_table.set_alignments("--:", ":--")
 info_table.append_row(f"{partner1.name} retires in:", partner1.year_of_retirement)
 info_table.append_row(f"{partner2.name} retires in:", partner2.year_of_retirement)
@@ -181,7 +191,7 @@ display(br())
 ## Summary text
 display(
     with_colour(
-        f"{partner1.name} worked until {partner1.year_of_retirement}. {partner2.name} worked until {partner2.year_of_retirement}. In the first year ({presenter.years_series[1]}) they spent {dround(presenter.first_year_spending)}. In retirement they had an income of {dround(presenter.retirement_spending)} a year. Their lifetime average yearly spending was {dround(presenter.average_yearly_spending)} a year.",
+        f"{partner1.name} worked until {partner1.year_of_retirement} (age {partner1.age_at_retirement}). {partner2.name} worked until {partner2.year_of_retirement} (age {partner2.age_at_retirement}). In the first year ({presenter.years_series[1]}) they spent {dround(presenter.first_year_spending)}. In retirement they had an income of {dround(presenter.retirement_spending)} a year. Their lifetime average yearly spending was {dround(presenter.average_yearly_spending)} a year.",
         "black",
     )
 )
