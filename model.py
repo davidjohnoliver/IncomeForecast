@@ -218,7 +218,7 @@ class deltas_state:
 
     @property
     def benefits(self):
-        """Pension payments and other government benefits."""
+        """Pension payments and other taxable benefits."""
         return self._benefits
 
     def update_benefits(self, new_value: float):
