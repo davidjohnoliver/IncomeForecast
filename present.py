@@ -164,6 +164,14 @@ class Individual_Presenter:
         return [t / 12 for t in self.rrsp_series]
 
     @property
+    def unregistered_series(self):
+        return [d.unregistered for d in self._all_deltas]
+
+    @property
+    def unregistered_monthly_series(self):
+        return [t / 12 for t in self.unregistered_series]
+
+    @property
     def career_salary_series(self):
         return [d.gross_salary for d in self._all_deltas if d.gross_salary > 0]
 
@@ -186,6 +194,14 @@ class Individual_Presenter:
     @property
     def career_rrsp_monthly_series(self):
         return [t/12 for t in self.career_rrsp_series]
+
+    @property
+    def career_unregistered_series(self):
+        return [d.unregistered for d in self._all_deltas if d.gross_salary > 0]
+
+    @property
+    def career_unregistered_monthly_series(self):
+        return [t/12 for t in self.career_unregistered_series]
 
 
 class Dual_Income_Simulation_Presenter:
@@ -285,7 +301,9 @@ class Dual_Income_Simulation_Presenter:
         return (
             deltas_state.partner1_deltas.tfsa
             + deltas_state.partner1_deltas.rrsp
+            + deltas_state.partner1_deltas.unregistered
             + deltas_state.partner2_deltas.tfsa
             + deltas_state.partner2_deltas.rrsp
+            + deltas_state.partner2_deltas.unregistered
         )
 

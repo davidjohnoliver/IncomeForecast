@@ -224,7 +224,9 @@ presenter = present.Dual_Income_Simulation_Presenter(simulation)
 
 
 def dround(raw: float):
-    zeroes = int(math.log10(raw)) - 1
+    if raw == 0:
+        return "$0"
+    zeroes = int(math.log10(abs(raw))) - 1
     zeroes = min(3, zeroes)  # Don't round to more than 1000
     return f"${int(round(raw, -zeroes)):,.0f}"
 
@@ -240,11 +242,11 @@ info_table.append_row(f"{partner1.name} retires in:", partner1.year_of_retiremen
 info_table.append_row(f"{partner2.name} retires in:", partner2.year_of_retirement)
 info_table.append_row(
     f"{partner1.name}'s salary:",
-    f"\${partner1.initial_salary:,.0f} to \${partner1.salary_plateau:,.0f}, increasing by {perc(partner1.salary_compound_rate)} each year",
+    f"${partner1.initial_salary:,.0f} to ${partner1.salary_plateau:,.0f}, increasing by {perc(partner1.salary_compound_rate)} each year",
 )
 info_table.append_row(
     f"{partner2.name}'s salary:",
-    f"\${partner2.initial_salary:,.0f} to \${partner2.salary_plateau:,.0f}, increasing by {perc(partner2.salary_compound_rate)} each year",
+    f"${partner2.initial_salary:,.0f} to ${partner2.salary_plateau:,.0f}, increasing by {perc(partner2.salary_compound_rate)} each year",
 )
 info_table.append_row("Interest rate:", perc(interest_rate))
 info_table.append_row("Increase savings weight", increase_savings_weight)
@@ -289,16 +291,20 @@ savings_breakdown_table = display_utils.table(
     "Year",
     f"{partner1.name} TFSA",
     f"{partner1.name} RRSP",
+    f"{partner1.name} unreg.",
     f"{partner2.name} TFSA",
     f"{partner2.name} RRSP",
+    f"{partner2.name} unreg.",
 )
 for i in range(1, YEARS_TO_SHOW_SAVINGS_FOR + 1):
     savings_breakdown_table.append_row(
         f"**{presenter.years_series[i]}**",
         dround(presenter.partner1.tfsa_monthly_series[i]),
         dround(presenter.partner1.rrsp_monthly_series[i]),
+        dround(presenter.partner1.unregistered_monthly_series[i]),
         dround(presenter.partner2.tfsa_monthly_series[i]),
         dround(presenter.partner2.rrsp_monthly_series[i]),
+        dround(presenter.partner2.unregistered_monthly_series[i]),
     )
 display(with_colour("Detailed savings breakdown, monthly contributions:", "black"))
 display(savings_breakdown_table.close())
