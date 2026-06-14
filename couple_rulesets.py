@@ -40,6 +40,8 @@ def alice(
         rrsp_annual_limit=0.0,
         partner1_pretax_rules=[],
         partner2_pretax_rules=[],
+        partner1_post_savings_rules=[],
+        partner2_post_savings_rules=[],
     )
 
     return ruleset_func
@@ -93,6 +95,8 @@ def _bad_seed_raw(
         rrsp_annual_limit=0.0,
         partner1_pretax_rules=[],
         partner2_pretax_rules=[],
+        partner1_post_savings_rules=[],
+        partner2_post_savings_rules=[],
     )
 
     return ruleset_func
@@ -181,6 +185,8 @@ def _charlie_raw(
     tfsa_yearly_increase: float,
     rrsp_income_fraction: float,
     rrsp_annual_limit: float,
+    partner1_rrsp_matching_cap_fraction: float,
+    partner2_rrsp_matching_cap_fraction: float,
     mortgage_principal: float,
     mortgage_amortization: int,
     mortgage_interest: float,
@@ -236,6 +242,15 @@ def _charlie_raw(
         pension_start_age=partner2_pension_start_age,
     )
 
+    # Employer RRSP matching depends on the employer, so the cap differs per partner. It matches each partner's own
+    # RRSP contribution, so it runs after the savings allocation.
+    partner1_rrsp_matching_rule = salary_rules.get_rrsp_matching(
+        partner1_rrsp_matching_cap_fraction
+    )
+    partner2_rrsp_matching_rule = salary_rules.get_rrsp_matching(
+        partner2_rrsp_matching_cap_fraction
+    )
+
     ruleset_func = ruleset.get_couple_ruleset(
         partner1_salary_rule=salary_rules.get_compound_plateau(
             partner1_salary_compound_rate, partner1_salary_plateau
@@ -265,6 +280,8 @@ def _charlie_raw(
         rrsp_annual_limit=rrsp_annual_limit,
         partner1_pretax_rules=[partner1_qpp_rule],
         partner2_pretax_rules=[partner2_qpp_rule],
+        partner1_post_savings_rules=[partner1_rrsp_matching_rule],
+        partner2_post_savings_rules=[partner2_rrsp_matching_rule],
         mortgage_payment_rule=mortgage_payment_rule,
     )
 
@@ -292,6 +309,8 @@ def charlie(
     tfsa_yearly_increase: float,
     rrsp_income_fraction: float,
     rrsp_annual_limit: float,
+    partner1_rrsp_matching_cap_fraction: float,
+    partner2_rrsp_matching_cap_fraction: float,
     optimize: solve.Optimizing_Solver,
     mortgage_principal: float,
     mortgage_amortization: int,
@@ -355,6 +374,8 @@ def charlie(
         tfsa_yearly_increase=tfsa_yearly_increase,
         rrsp_income_fraction=rrsp_income_fraction,
         rrsp_annual_limit=rrsp_annual_limit,
+        partner1_rrsp_matching_cap_fraction=partner1_rrsp_matching_cap_fraction,
+        partner2_rrsp_matching_cap_fraction=partner2_rrsp_matching_cap_fraction,
         mortgage_principal=mortgage_principal,
         mortgage_amortization=mortgage_amortization,
         mortgage_interest=mortgage_interest,

@@ -95,6 +95,8 @@ def get_couple_ruleset(
     rrsp_annual_limit: float,
     partner1_pretax_rules,
     partner2_pretax_rules,
+    partner1_post_savings_rules,
+    partner2_post_savings_rules,
     mortgage_payment_rule=None,
 ):
     def ruleset(
@@ -146,5 +148,12 @@ def get_couple_ruleset(
 
         yield spending_rule
         yield savings_rule
+
+        # Rules that depend on the savings allocation (eg RRSP matching, which matches deltas.rrsp)
+        for partner1_post_savings_rule in partner1_post_savings_rules:
+            yield model.get_couple_rule_from_single_rule(partner1_post_savings_rule, 1)
+
+        for partner2_post_savings_rule in partner2_post_savings_rules:
+            yield model.get_couple_rule_from_single_rule(partner2_post_savings_rule, 2)
 
     return ruleset
