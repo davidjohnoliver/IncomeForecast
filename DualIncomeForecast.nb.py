@@ -52,6 +52,8 @@ partner1.initial_tfsa_limit = set.this.value
 partner1.salary_plateau = set.this.value
 ### By what rate do you predict your salary to increase per year, on average, up to its peak? (Eg, if you expect it to increase by 5% each year, put 'salary_compound_rate=0.05')
 partner1.salary_compound_rate = set.this.value
+### What fraction of your salary does your employer match in RRSP contributions? (Set to 0 if your employer doesn't match RRSP contributions.)
+partner1.rrsp_matching_cap_fraction = 0.0
 
 ### If you started your Quebec Pension Plan pension at age 60 now, what would your current monthly pension be?
 partner1.current_monthly_pension_at_60 = set.this.value
@@ -90,6 +92,8 @@ partner2.initial_tfsa_limit = set.this.value
 partner2.salary_plateau = set.this.value
 ### By what rate do you predict your salary to increase per year, on average, up to its peak? (Eg, if you expect it to increase by 5% each year, put 'salary_compound_rate=0.05')
 partner2.salary_compound_rate = set.this.value
+### What fraction of your salary does your employer match in RRSP contributions? (Set to 0 if your employer doesn't match RRSP contributions.)
+partner2.rrsp_matching_cap_fraction = 0.0
 
 ### If you started your Quebec Pension Plan pension at age 60 now, what would your current monthly pension be?
 partner2.current_monthly_pension_at_60 = set.this.value
@@ -180,6 +184,8 @@ ruleset = couple_rulesets.charlie(
     tfsa_yearly_increase=tfsa_yearly_increase,
     rrsp_income_fraction=rrsp_income_fraction,
     rrsp_annual_limit=rrsp_annual_limit,
+    partner1_rrsp_matching_cap_fraction=partner1_rrsp_matching_cap_fraction,
+    partner2_rrsp_matching_cap_fraction=partner2_rrsp_matching_cap_fraction,
     optimize=optimize,
     mortgage_principal=mortgage_principal,
     mortgage_amortization=mortgage_amortization,

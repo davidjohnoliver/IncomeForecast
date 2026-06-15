@@ -395,6 +395,15 @@ class Individual_Parameters:
         self._initial_rrsp_limit = value
 
     @property
+    def rrsp_matching_cap_fraction(self):
+        """The fraction of this person's salary that their employer matches in RRSP contributions (0 if no employer match)."""
+        return self._rrsp_matching_cap_fraction
+
+    @rrsp_matching_cap_fraction.setter
+    def rrsp_matching_cap_fraction(self, value):
+        self._rrsp_matching_cap_fraction = value
+
+    @property
     def year_of_retirement(self):
         return self.year_of_birth + self.age_at_retirement
 
