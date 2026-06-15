@@ -442,6 +442,11 @@ class couple_deltas_state:
         return self.partner1_deltas.contributions + self.partner2_deltas.contributions
 
     @property
+    def household_benefits(self):
+        """Household-level total for pension payments and other taxable benefits."""
+        return self.partner1_deltas.benefits + self.partner2_deltas.benefits
+
+    @property
     def household_debt_payments(self):
         """Payments of outstanding debt. This currently doesn't correspond to any funds_state value."""
         return self._household_debt_payments

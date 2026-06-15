@@ -81,7 +81,17 @@ def get_increasing_savings_increasing_spending(
         previous_funds: model.couple_funds_state,
         previous_deltas: model.couple_deltas_state,
     ):
-        if previous_deltas.household_total_net_income <= 0:
+
+        # This is a hack to remove the previous year's RRSP matching from total net income, to avoid simulation drift from chasing the wrong ratio
+        # since at this point we don't know what this year's matching will be. Note that it will break if working-career benefits ever includes
+        # components other than RRSP matching (currently it doesn't). Note also that last years' savings below is only 'correct' because it happens
+        # to be calculated as the difference between net income and spending, rather than summing savings types.
+        previous_spendable_net_income = (
+            previous_deltas.household_total_net_income
+            - previous_deltas.household_benefits
+        )
+
+        if previous_spendable_net_income <= 0:
             # If there was no (or negative) net income, just maintain previous spending.
             return deltas.update_household_spending(previous_deltas.household_spending)
 
@@ -93,8 +103,7 @@ def get_increasing_savings_increasing_spending(
             # The rationale is for total savings to approach 0 as initial savings approaches 0, and total spending to approach 0 as initial spending
             # approaches 0. This trait of the function maximises the chance of finding a consistent solution for a given target.
             initial_spending_fraction = (
-                previous_deltas.household_spending
-                / previous_deltas.household_total_net_income
+                previous_deltas.household_spending / previous_spendable_net_income
             )
             initial_spending_fraction = min(
                 initial_spending_fraction, 1
@@ -105,11 +114,10 @@ def get_increasing_savings_increasing_spending(
             )
 
         previous_savings_absolute = (
-            previous_deltas.household_total_net_income
-            - previous_deltas.household_spending
+            previous_spendable_net_income - previous_deltas.household_spending
         )
         previous_savings_proportional = (
-            previous_savings_absolute / previous_deltas.household_total_net_income
+            previous_savings_absolute / previous_spendable_net_income
         )
         new_savings_proportional = previous_savings_proportional
         new_savings_for_ceiling = (
