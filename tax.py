@@ -22,7 +22,12 @@ _qcBrackets = [
     _TaxBracket(132245.01, 0, 25.75),
 ]
 
-federalPersonalAmount = 14829
+# The federal basic personal amount (BPA) has a base amount, reflected as the 0%
+# bracket below, plus an "enhanced" amount available to low and middle earners.
+# The enhanced amount is reduced linearly across the second-highest (29%) bracket
+# and disappears entirely once income reaches the top (33%) bracket.
+federalPersonalAmount = 14829  # Base BPA (the amount every taxpayer receives).
+federalMaxPersonalAmount = 16452  # Maximum BPA, including the enhanced amount.
 _caBrackets = [
     _TaxBracket(0, federalPersonalAmount, 0),
     _TaxBracket(federalPersonalAmount + 0.1, 58523, 14),
@@ -57,6 +62,37 @@ def get_income_tax_from_brackets(
     return totalTax
 
 
+def get_enhanced_bpa_credit(taxable_income: float, abatement: float):
+    """
+    Returns the federal tax credit from the enhanced (income-tested) portion of
+    the basic personal amount.
+
+    The base BPA is already reflected as the 0% bracket in _caBrackets. The
+    enhanced amount on top of it is reduced linearly for income between the
+    bottom of the 29% bracket and the bottom of the 33% bracket, vanishing
+    entirely at the top bracket. The credit is valued at the lowest federal
+    marginal rate and, for Quebec residents, reduced by the Quebec abatement.
+    """
+
+    enhanced_amount = federalMaxPersonalAmount - federalPersonalAmount
+    phaseout_start = _caBrackets[4].min
+    phaseout_end = _caBrackets[4].max
+    lowest_rate = _caBrackets[1].taxRate
+
+    if taxable_income <= phaseout_start:
+        remaining_amount = enhanced_amount
+    elif taxable_income >= phaseout_end:
+        remaining_amount = 0
+    else:
+        fraction_removed = (taxable_income - phaseout_start) / (
+            phaseout_end - phaseout_start
+        )
+        remaining_amount = enhanced_amount * (1 - fraction_removed)
+
+    rate = lowest_rate * (1 - abatement / 100.0)
+    return remaining_amount * rate / 100.0
+
+
 def get_income_tax(taxable_income: float):
     """
     Returns the total income tax owed for the nominated amount of taxable income (earned in Quebec by a Quebec resident).
@@ -65,6 +101,8 @@ def get_income_tax(taxable_income: float):
     assert datetime.datetime.now().year == 2026 # Marginal tax brackets should be kept up to date.
 
     caTax = get_income_tax_from_brackets(taxable_income, _qcAbatement, _caBrackets)
+    caTax -= get_enhanced_bpa_credit(taxable_income, _qcAbatement)
+    caTax = max(caTax, 0)
     qcTax = get_income_tax_from_brackets(taxable_income, 0, _qcBrackets)
     total = caTax + qcTax
     return total
