@@ -4,10 +4,7 @@ def lerp(value_0: float, value_1: float, t: float):
     average for any intermediate value.
     """
 
-    if t > 1:
-        t == 1
-    if t < 0:
-        t == 0
+    t = clamp(t, 0, 1)
 
     return value_0 + t * (value_1 - value_0)
 
