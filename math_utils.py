@@ -11,7 +11,9 @@ def lerp(value_0: float, value_1: float, t: float):
 
 def clamp(to_clamp: float, lower_limit: float, upper_limit: float):
     if upper_limit < lower_limit:
-        raise ValueError
+        # Tolerate floating-point noise that inverts the bounds by a negligible amount.
+        assert lower_limit - upper_limit < 1e-3, f"clamp bounds inverted: [{lower_limit}, {upper_limit}]"
+        upper_limit = lower_limit
 
     if to_clamp < lower_limit:
         to_clamp = lower_limit
