@@ -277,15 +277,45 @@ def test_get_mortgage_payment():
     expected_yearly_payment = 6979.236
     assert math.isclose(expected_yearly_payment, delta.debt_payments, rel_tol=1e-5)
 
-    # At the end of amortization period (2021 + 25 = 2046)
-    delta_end = model.deltas_state.from_year(2045)
+    # Final payment year (initial_year + amortization = 2046)
+    delta_end = model.deltas_state.from_year(2046)
     delta_end = rule(delta_end, None, None)
     assert math.isclose(expected_yearly_payment, delta_end.debt_payments, rel_tol=1e-5)
 
-    # After amortization period
-    delta_after = model.deltas_state.from_year(2046)
+    # After amortization period (initial_year + amortization + 1 = 2047)
+    delta_after = model.deltas_state.from_year(2047)
     delta_after = rule(delta_after, None, None)
     assert delta_after.debt_payments == 0
+
+
+def test_get_mortgage_payment_pays_full_amount_over_amortization():
+    principal = 100000
+    amortization = 25
+    interest = 0.05
+    initial_year = 2021
+
+    rule = natural_rules.get_mortgage_payment(
+        principal, amortization, interest, initial_year
+    )
+    yearly_payment = natural_rules.calculate_yearly_mortgage_payment(
+        principal, amortization, interest
+    )
+
+    # The simulation applies rules starting the year after initial_year (initial_year itself is
+    # the seed state), so iterate from initial_year + 1. Run for amortization + 5 years to confirm
+    # that the full mortgage is paid and that payments stop once it is paid off.
+    total_paid = 0.0
+    payment_count = 0
+    for year in range(initial_year + 1, initial_year + 1 + amortization + 5):
+        delta = model.deltas_state.from_year(year)
+        delta = rule(delta, None, None)
+        total_paid += delta.debt_payments
+        if delta.debt_payments > 0:
+            payment_count += 1
+
+    # Exactly `amortization` yearly payments are made, totalling the full amount of the mortgage.
+    assert amortization == payment_count
+    assert math.isclose(yearly_payment * amortization, total_paid)
 
 
 def test_get_mortgage_payment_zero_interest():

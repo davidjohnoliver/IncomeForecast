@@ -227,7 +227,10 @@ def get_mortgage_payment(
         remaining_principal, initial_remaining_amortization_length, mortgage_interest
     )
 
-    end_year = initial_year + initial_remaining_amortization_length
+    # Payments are applied for `initial_remaining_amortization_length` years. The simulation
+    # applies rules starting the year *after* `initial_year` (that year holds the seed state), so
+    # the payment window runs from initial_year + 1 up to and including initial_year + amortization.
+    end_year = initial_year + initial_remaining_amortization_length + 1
 
     def mortgage_payment(
         deltas: model.deltas_state,
@@ -258,7 +261,10 @@ def get_couple_mortgage_payment(
         remaining_principal, initial_remaining_amortization_length, mortgage_interest
     )
 
-    end_year = initial_year + initial_remaining_amortization_length
+    # Payments are applied for `initial_remaining_amortization_length` years. The simulation
+    # applies rules starting the year *after* `initial_year` (that year holds the seed state), so
+    # the payment window runs from initial_year + 1 up to and including initial_year + amortization.
+    end_year = initial_year + initial_remaining_amortization_length + 1
 
     def mortgage_payment(
         deltas: model.couple_deltas_state,
