@@ -11,9 +11,9 @@ The main layers:
 
 ### `Simulation`
 
-The `Simulation` class is responsible for obtaining answers to questions like, 'how much do I need to save,' and 'how should I optimally distribute my savings between different investment options'. 
+The `Simulation` class is responsible for obtaining answers to questions like, 'how much do I need to save,' and 'how should I optimally distribute my savings between different investment options'.
 
-In addition to the various boundary conditions of the simulation, it takes a ruleset and a solver function as inputs. 
+In addition to the various boundary conditions of the simulation, it takes a ruleset and a solver function as inputs.
 
 Within `Simulation` most parameters are fixed as 'facts' about the simulation (eg year in which it starts, initial salary, initial savings etc), but a few parameters will be varied across multiple runs: the initial spending level, which dictates the subsequent evolution of spending, and is the parameter being solved for; and any parameters that are being optimized by an optimizing solver, such as the split between different investment types.
 
@@ -39,13 +39,13 @@ Applies `deltas_state` to a `funds_state`, incrementing each fund type according
 
 A 'solver' in the program is a function with a defined signature which tries to find the numeric input that produces a given target numeric output, for a pair of model functions and a range of allowed inputs. The first model function takes the numeric input and outputs an intermediate object, which is anticipated to be of later interest (in current usage in the program, this will be a `Simulation_Run`, but the solver doesn't care). The second model function takes the intermediate object as input and produces a numeric output.
 
-The solver returns a 4-ple with the solution input, the intermediate object corresponding to the solution, a boolean indicating whether a solution was actually found, and a status message. 
+The solver returns a 4-ple with the solution input, the intermediate object corresponding to the solution, a boolean indicating whether a solution was actually found, and a status message.
 
 It may be that no valid solution for the given parameters could be found, in which case the first two values of the tuple will normally come from whatever step the solver ended on. (It's convenient for subsequent analysis and user troubleshooting to have these values even if they don't represent a valid solution.)
 
 ### `binary_solver`
 
-This implementation assumes that the model function is monotonic and simply does a binary search within the allowed input range, calling the model function repeatedly, until a solution is found to the desired tolerance or the range is exhausted. 
+This implementation assumes that the model function is monotonic and simply does a binary search within the allowed input range, calling the model function repeatedly, until a solution is found to the desired tolerance or the range is exhausted.
 
 ### `Optimizing_Solver`
 
@@ -65,7 +65,7 @@ The term 'natural' is used for "rules that are set by law, economics and/or math
 
 ### Salary rule
 
-A salary rule describes how gross (pre-tax) salary evolves over the course of the simulation. Typically there's one salary rule in use for a given model run. 
+A salary rule describes how gross (pre-tax) salary evolves over the course of the simulation. Typically there's one salary rule in use for a given model run.
 
 It's usually a reasonable assumption that the output of the salary rule is independent of the output of other rules: people earn however much they're earning at any given time.
 
@@ -85,13 +85,19 @@ The savings allocation rule is, like the spending vs. saving rule, a recommendat
 
 ### Career and retirement phases
 
-There are two phases to the model, the career period (where the user is in the workforce and earning money) and the retirement period (the user is retired and living off their savings). Both these phases are modelled in the same way, by applying rules to update the available funds; the only difference is in the rules applied. 
+There are two phases to the model, the career period (where the user is in the workforce and earning money) and the retirement period (the user is retired and living off their savings). Both these phases are modelled in the same way, by applying rules to update the available funds; the only difference is in the rules applied.
 
 The retirement-phase rules are inherently simpler, since there's no longer a salary to model, nor savings contributions to make decisions about; the main decision in this phase is which pool (ie which type of investment) to deduct from to meet living expenses. (Again, the user is presumably indifferent on this question beyond the goal of optimizing their lifestyle expenditures.)
 
 ### Rulesets
 
-A ruleset is a sequence of rules that completely describe a simulation. Typically a ruleset consists of a salary progression rule, a spending vs. saving rule, a savings allocation rule, and as many natural rules as are needed. 
+A ruleset is a sequence of rules that completely describe a simulation. Typically a ruleset consists of a salary progression rule, a spending vs. saving rule, a savings allocation rule, and as many natural rules as are needed.
+
+## Known issues
+
+### Retirement-spending step-up/spike
+
+The `increasing_savings_increasing_spending` spending rule (used by the `charlie`/`bad_seed` couple rulesets) does not smooth consumption across the working-to-retirement boundary; it ratchets spending upward. When the couple's retirement transitions fall close together, the model can over-accumulate savings during the career and then prescribe a large step-up in retirement spending — sometimes above working-life spending — funded by drawing the over-large balance back down to the final-savings target. This strains the model's "steady retirement income" intent even though the solver still reports `was_solution_found = True`. This is generally not an issue when optimization is enabled (`should_optimize = True`).
 
 ## Visualization and post-processing
 
